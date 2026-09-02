@@ -1,0 +1,63 @@
+:root {
+    --hw-black: #141414;
+    --hw-black-soft: #1f1f1f;
+    --hw-gold: #e8a33c;
+    --hw-gold-soft: #f4c874;
+}
+
+/* Sidebar container */
+.hw-sidebar {
+    background: linear-gradient(180deg, var(--hw-black) 0%, var(--hw-black-soft) 100%);
+}
+
+/* Link menu di sidebar */
+.hw-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1rem;
+    border-radius: 0.5rem;
+    color: #d1d5db;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+}
+
+.hw-nav-link:hover {
+    background-color: rgba(232, 163, 60, 0.1);
+    color: var(--hw-gold-soft);
+}
+
+.hw-nav-link.active {
+    background-color: var(--hw-gold);
+    color: #141414;
+    font-weight: 600;
+}
+
+.hw-nav-link svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex-shrink: 0;
+}
+
+/* Logo badge di atas sidebar */
+.hw-logo-badge {
+    background: var(--hw-gold);
+    color: #141414;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+/* Overlay backdrop untuk mobile */
+.hw-backdrop {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Scrollbar tipis untuk sidebar */
+.hw-sidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.hw-sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(232, 163, 60, 0.4);
+    border-radius: 4px;
+}

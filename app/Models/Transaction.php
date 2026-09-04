@@ -9,15 +9,27 @@ class Transaction extends Model
     protected $fillable = [
         'invoice_number',
         'user_id',
+        'customer_id',
         'total',
         'paid',
         'change',
         'payment_method',
+        'status',
+        'due_date',
+    ];
+
+    protected $casts = [
+        'due_date' => 'date',
     ];
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     public function items()
@@ -28,5 +40,30 @@ class Transaction extends Model
     public function stockMovements()
     {
         return $this->hasMany(StockMovement::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(TransactionPayment::class);
+    }
+
+    public function getRemainingAttribute()
+    {
+        return max(0, $this->total - $this->paid);
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid';
+    }
+
+    public function isOnHold(): bool
+    {
+        return $this->status === 'on_hold';
+    }
+
+    public function isPartial(): bool
+    {
+        return $this->status === 'partial';
     }
 }

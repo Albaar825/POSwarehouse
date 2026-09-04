@@ -33,7 +33,7 @@
         </div>
 
         <p class="text-sm text-gray-500">
-            Tambahkan produk baru beserta variant warna, size, dan stok.
+            Tambahkan produk baru beserta variant warna, size, stok, dan gambar.
         </p>
     </div>
 
@@ -229,7 +229,8 @@
 
                         <div class="relative">
 
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 Rp
                             </span>
 
@@ -259,7 +260,8 @@
 
                         <div class="relative">
 
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                            <span
+                                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
                                 Rp
                             </span>
 
@@ -277,7 +279,7 @@
 
 
                     {{-- MIN STOCK --}}
-                    <div>
+                    <div class="md:col-span-2">
 
                         <label for="min_stock"
                             class="block text-sm font-medium text-gray-700 mb-1">
@@ -293,45 +295,11 @@
                             value="{{ old('min_stock', 0) }}"
                             min="0"
                             required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            class="w-full md:w-1/2 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
 
                         <p class="text-xs text-gray-400 mt-1">
                             Berlaku untuk total stok seluruh variant produk.
                         </p>
-
-                    </div>
-
-
-                    {{-- IMAGE --}}
-                    <div>
-
-                        <label for="image"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Gambar Produk
-
-                        </label>
-
-                        <input type="file"
-                            name="image"
-                            id="image"
-                            accept="image/jpeg,image/png,image/jpg,image/webp"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                        <p class="text-xs text-gray-400 mt-1">
-                            JPG, JPEG, PNG, WEBP. Maksimal 2 MB.
-                        </p>
-
-                        {{-- IMAGE PREVIEW --}}
-                        <div id="imagePreviewContainer"
-                            class="hidden mt-3">
-
-                            <img id="imagePreview"
-                                src=""
-                                alt="Preview"
-                                class="w-32 h-32 object-cover rounded-lg border border-gray-200">
-
-                        </div>
 
                     </div>
 
@@ -356,7 +324,7 @@
                         </h2>
 
                         <p class="text-xs text-gray-500 mt-1">
-                            Tentukan warna, size, dan stok untuk setiap variant.
+                            Setiap variant dapat memiliki warna, size, stok, dan banyak gambar.
                         </p>
 
                     </div>
@@ -376,41 +344,12 @@
 
             <div class="p-5">
 
-                {{-- VARIANT HEADER --}}
-                <div class="hidden md:grid grid-cols-12 gap-3 mb-2 px-1">
-
-                    <div class="col-span-4">
-                        <span class="text-xs font-semibold text-gray-500 uppercase">
-                            Warna
-                        </span>
-                    </div>
-
-                    <div class="col-span-3">
-                        <span class="text-xs font-semibold text-gray-500 uppercase">
-                            Size
-                        </span>
-                    </div>
-
-                    <div class="col-span-3">
-                        <span class="text-xs font-semibold text-gray-500 uppercase">
-                            Stok
-                        </span>
-                    </div>
-
-                    <div class="col-span-2">
-                        <span class="text-xs font-semibold text-gray-500 uppercase">
-                            Aksi
-                        </span>
-                    </div>
-
-                </div>
-
-
                 {{-- VARIANT CONTAINER --}}
                 <div id="variantsContainer"
-                    class="space-y-3">
+                    class="space-y-4">
 
                     @php
+
                         $oldVariants = old('variants', [
                             [
                                 'color' => '',
@@ -418,22 +357,66 @@
                                 'stock' => 0,
                             ]
                         ]);
+
                     @endphp
 
 
                     @foreach ($oldVariants as $index => $variant)
 
-                        <div class="variant-row border border-gray-200 rounded-lg p-4 md:p-3"
+                        <div class="variant-row border border-gray-200 rounded-xl p-4 md:p-5"
                             data-index="{{ $index }}">
 
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                            {{-- VARIANT TOP --}}
+                            <div class="flex items-center justify-between mb-4">
+
+                                <div>
+
+                                    <h3 class="font-semibold text-gray-800">
+                                        Variant #{{ $index + 1 }}
+                                    </h3>
+
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Data warna, size, stok dan gambar variant.
+                                    </p>
+
+                                </div>
+
+
+                                <button type="button"
+                                    class="remove-variant inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm transition">
+
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke-width="1.5"
+                                        stroke="currentColor"
+                                        class="w-4 h-4">
+
+                                        <path stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244-2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 1-7.5 0" />
+
+                                    </svg>
+
+                                    Hapus
+
+                                </button>
+
+                            </div>
+
+
+                            {{-- COLOR / SIZE / STOCK --}}
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
 
 
                                 {{-- COLOR --}}
                                 <div class="md:col-span-4">
 
-                                    <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+
                                         Warna
+                                        <span class="text-red-500">*</span>
+
                                     </label>
 
                                     <input type="text"
@@ -446,10 +429,12 @@
 
 
                                 {{-- SIZE --}}
-                                <div class="md:col-span-3">
+                                <div class="md:col-span-4">
 
-                                    <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+
                                         Size
+
                                     </label>
 
                                     <select name="variants[{{ $index }}][size]"
@@ -459,40 +444,16 @@
                                             -- Size --
                                         </option>
 
-                                        <option value="XS"
-                                            {{ ($variant['size'] ?? '') === 'XS' ? 'selected' : '' }}>
-                                            XS
-                                        </option>
+                                        @foreach (['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as $size)
 
-                                        <option value="S"
-                                            {{ ($variant['size'] ?? '') === 'S' ? 'selected' : '' }}>
-                                            S
-                                        </option>
+                                            <option value="{{ $size }}"
+                                                {{ ($variant['size'] ?? '') === $size ? 'selected' : '' }}>
 
-                                        <option value="M"
-                                            {{ ($variant['size'] ?? '') === 'M' ? 'selected' : '' }}>
-                                            M
-                                        </option>
+                                                {{ $size }}
 
-                                        <option value="L"
-                                            {{ ($variant['size'] ?? '') === 'L' ? 'selected' : '' }}>
-                                            L
-                                        </option>
+                                            </option>
 
-                                        <option value="XL"
-                                            {{ ($variant['size'] ?? '') === 'XL' ? 'selected' : '' }}>
-                                            XL
-                                        </option>
-
-                                        <option value="XXL"
-                                            {{ ($variant['size'] ?? '') === 'XXL' ? 'selected' : '' }}>
-                                            XXL
-                                        </option>
-
-                                        <option value="XXXL"
-                                            {{ ($variant['size'] ?? '') === 'XXXL' ? 'selected' : '' }}>
-                                            XXXL
-                                        </option>
+                                        @endforeach
 
                                     </select>
 
@@ -500,10 +461,13 @@
 
 
                                 {{-- STOCK --}}
-                                <div class="md:col-span-3">
+                                <div class="md:col-span-4">
 
-                                    <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+
                                         Stok
+                                        <span class="text-red-500">*</span>
+
                                     </label>
 
                                     <input type="number"
@@ -515,30 +479,54 @@
 
                                 </div>
 
+                            </div>
 
-                                {{-- DELETE --}}
-                                <div class="md:col-span-2">
 
-                                    <button type="button"
-                                        class="remove-variant w-full md:w-auto inline-flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2.5 rounded-lg text-sm transition">
+                            {{-- IMAGE VARIANT --}}
+                            <div class="mt-5 pt-5 border-t border-gray-100">
 
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke-width="1.5"
-                                            stroke="currentColor"
-                                            class="w-4 h-4">
+                                <div class="mb-3">
 
-                                            <path stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    <label class="block text-sm font-medium text-gray-700">
 
-                                        </svg>
+                                        Gambar Variant
 
-                                        Hapus
+                                        <span class="text-gray-400 font-normal">
+                                            (opsional)
+                                        </span>
 
-                                    </button>
+                                    </label>
 
+                                    <p class="text-xs text-gray-400 mt-1">
+
+                                        Upload beberapa gambar untuk warna
+                                        <strong class="variant-color-label">
+                                            {{ $variant['color'] ?: 'variant ini' }}
+                                        </strong>.
+
+                                    </p>
+
+                                </div>
+
+
+                                <input type="file"
+                                    name="variants[{{ $index }}][images][]"
+                                    class="variant-images w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                                    multiple>
+
+
+                                <p class="text-xs text-gray-400 mt-1">
+
+                                    Bisa memilih banyak gambar sekaligus.
+                                    Format JPG, JPEG, PNG, WEBP.
+                                    Maksimal 2 MB per gambar.
+
+                                </p>
+
+
+                                {{-- IMAGE PREVIEW --}}
+                                <div class="image-preview-container mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                 </div>
 
                             </div>
@@ -617,275 +605,586 @@
 
 <script>
 
-    document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-        const variantsContainer = document.getElementById('variantsContainer');
-        const addVariantButton = document.getElementById('addVariant');
-        const totalStockElement = document.getElementById('totalStock');
-        const stockUnitElement = document.getElementById('stockUnit');
-        const unitSelect = document.getElementById('unit');
-        const imageInput = document.getElementById('image');
-        const imagePreview = document.getElementById('imagePreview');
-        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-        const productForm = document.getElementById('productForm');
-        const submitButton = document.getElementById('submitButton');
+    const variantsContainer = document.getElementById('variantsContainer');
 
-        let variantIndex = {{ count($oldVariants) }};
+    const addVariantButton = document.getElementById('addVariant');
+
+    const totalStockElement = document.getElementById('totalStock');
+
+    const stockUnitElement = document.getElementById('stockUnit');
+
+    const unitSelect = document.getElementById('unit');
+
+    const productForm = document.getElementById('productForm');
+
+    const submitButton = document.getElementById('submitButton');
+
+    let variantIndex = {{ count($oldVariants) }};
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE TOTAL STOCK
-        |--------------------------------------------------------------------------
-        */
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE TOTAL STOCK
+    |--------------------------------------------------------------------------
+    */
 
-        function updateTotalStock() {
+    function updateTotalStock() {
 
-            let total = 0;
+        let total = 0;
 
-            const stockInputs = variantsContainer.querySelectorAll('.variant-stock');
+        const stockInputs =
+            variantsContainer.querySelectorAll('.variant-stock');
 
-            stockInputs.forEach(function (input) {
+        stockInputs.forEach(function (input) {
 
-                const value = parseInt(input.value) || 0;
+            const value = parseInt(input.value) || 0;
 
-                total += value;
+            total += value;
 
-            });
+        });
 
-            totalStockElement.textContent = total;
+        totalStockElement.textContent = total;
 
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE UNIT
+    |--------------------------------------------------------------------------
+    */
+
+    function updateUnit() {
+
+        stockUnitElement.textContent =
+            unitSelect.value || 'pcs';
+
+    }
+
+    unitSelect.addEventListener('change', updateUnit);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE COLOR LABEL
+    |--------------------------------------------------------------------------
+    */
+
+    function updateColorLabel(row) {
+
+        const colorInput =
+            row.querySelector('.variant-color');
+
+        const label =
+            row.querySelector('.variant-color-label');
+
+        if (!colorInput || !label) {
+            return;
+        }
+
+        const color =
+            colorInput.value.trim();
+
+        label.textContent =
+            color || 'variant ini';
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMAGE PREVIEW
+    |--------------------------------------------------------------------------
+    */
+
+    function handleImagePreview(input) {
+
+        const row =
+            input.closest('.variant-row');
+
+        const previewContainer =
+            row.querySelector('.image-preview-container');
+
+        previewContainer.innerHTML = '';
+
+        const files =
+            Array.from(input.files);
+
+        const maxSize =
+            2 * 1024 * 1024;
+
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/jpg',
+            'image/webp'
+        ];
+
+
+        if (files.length === 0) {
+            return;
         }
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE UNIT
-        |--------------------------------------------------------------------------
-        */
+        let invalidFile = false;
 
-        function updateUnit() {
 
-            stockUnitElement.textContent = unitSelect.value || 'pcs';
+        files.forEach(function (file, index) {
+
+            if (!allowedTypes.includes(file.type)) {
+
+                invalidFile = true;
+
+                return;
+
+            }
+
+
+            if (file.size > maxSize) {
+
+                invalidFile = true;
+
+                return;
+
+            }
+
+
+            const wrapper =
+                document.createElement('div');
+
+            wrapper.className =
+                'relative group';
+
+
+            const image =
+                document.createElement('img');
+
+            image.className =
+                'w-full h-32 object-cover rounded-lg border border-gray-200';
+
+
+            const badge =
+                document.createElement('div');
+
+            badge.className =
+                'absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md';
+
+            badge.textContent =
+                index === 0
+                    ? 'Utama'
+                    : index + 1;
+
+
+            const reader =
+                new FileReader();
+
+
+            reader.onload =
+                function (event) {
+
+                    image.src =
+                        event.target.result;
+
+                };
+
+
+            reader.readAsDataURL(file);
+
+
+            wrapper.appendChild(image);
+
+            wrapper.appendChild(badge);
+
+            previewContainer.appendChild(wrapper);
+
+        });
+
+
+        if (invalidFile) {
+
+            alert(
+                'Setiap gambar harus JPG, JPEG, PNG, atau WEBP dan maksimal 2 MB per gambar.'
+            );
+
+            input.value = '';
+
+            previewContainer.innerHTML = '';
 
         }
 
-        unitSelect.addEventListener('change', updateUnit);
-
-        /*
-        |--------------------------------------------------------------------------
-        | ADD VARIANT
-        |--------------------------------------------------------------------------
-        */
-
-        addVariantButton.addEventListener('click', function () {
-
-            const row = document.createElement('div');
-
-            row.className = 'variant-row border border-gray-200 rounded-lg p-4 md:p-3';
-
-            row.dataset.index = variantIndex;
-
-            row.innerHTML = `
-
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-
-                    <div class="md:col-span-4">
-
-                        <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
-                            Warna
-                        </label>
-
-                        <input
-                            type="text"
-                            name="variants[${variantIndex}][color]"
-                            placeholder="Contoh: Hitam"
-                            class="variant-color w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-
-                    </div>
+    }
 
 
-                    <div class="md:col-span-3">
+    /*
+    |--------------------------------------------------------------------------
+    | ADD VARIANT
+    |--------------------------------------------------------------------------
+    */
 
-                        <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
-                            Size
-                        </label>
+    addVariantButton.addEventListener('click', function () {
 
-                        <select
-                            name="variants[${variantIndex}][size]"
-                            class="variant-size w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-
-                            <option value="">
-                                -- Size --
-                            </option>
-
-                            <option value="XS">XS</option>
-                            <option value="S">S</option>
-                            <option value="M">M</option>
-                            <option value="L">L</option>
-                            <option value="XL">XL</option>
-                            <option value="XXL">XXL</option>
-                            <option value="XXXL">XXXL</option>
-
-                        </select>
-
-                    </div>
+        const index =
+            variantIndex;
 
 
-                    <div class="md:col-span-3">
+        const row =
+            document.createElement('div');
 
-                        <label class="block md:hidden text-sm font-medium text-gray-700 mb-1">
-                            Stok
-                        </label>
+        row.className =
+            'variant-row border border-gray-200 rounded-xl p-4 md:p-5';
 
-                        <input
-                            type="number"
-                            name="variants[${variantIndex}][stock]"
-                            value="0"
-                            min="0"
-                            required
-                            class="variant-stock w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-
-                    </div>
+        row.dataset.index =
+            index;
 
 
-                    <div class="md:col-span-2">
+        row.innerHTML = `
 
-                        <button
-                            type="button"
-                            class="remove-variant w-full md:w-auto inline-flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2.5 rounded-lg text-sm transition"
-                        >
+            <div class="flex items-center justify-between mb-4">
 
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke-width="1.5"
-                                stroke="currentColor"
-                                class="w-4 h-4">
+                <div>
 
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    <h3 class="font-semibold text-gray-800">
+                        Variant #${index + 1}
+                    </h3>
 
-                            </svg>
-
-                            Hapus
-
-                        </button>
-
-                    </div>
+                    <p class="text-xs text-gray-400 mt-1">
+                        Data warna, size, stok dan gambar variant.
+                    </p>
 
                 </div>
 
-            `;
-            variantsContainer.appendChild(row);
-            variantIndex++;
-            updateTotalStock();
-        });
+                <button
+                    type="button"
+                    class="remove-variant inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm transition"
+                >
 
-        /*
-        |--------------------------------------------------------------------------
-        | REMOVE VARIANT
-        |--------------------------------------------------------------------------
-        */
-        variantsContainer.addEventListener('click', function (event) {
-            const button = event.target.closest('.remove-variant');
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="w-4 h-4">
+
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244-2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.682-.107 1.022-.166m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 1-7.5 0"
+                        />
+
+                    </svg>
+
+                    Hapus
+
+                </button>
+
+            </div>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+                <div class="md:col-span-4">
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+
+                        Warna
+                        <span class="text-red-500">*</span>
+
+                    </label>
+
+                    <input
+                        type="text"
+                        name="variants[${index}][color]"
+                        placeholder="Contoh: Hitam"
+                        class="variant-color w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+
+                </div>
+
+
+                <div class="md:col-span-4">
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        Size
+                    </label>
+
+                    <select
+                        name="variants[${index}][size]"
+                        class="variant-size w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+
+                        <option value="">
+                            -- Size --
+                        </option>
+
+                        <option value="XS">XS</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                        <option value="XXXL">XXXL</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="md:col-span-4">
+
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+
+                        Stok
+                        <span class="text-red-500">*</span>
+
+                    </label>
+
+                    <input
+                        type="number"
+                        name="variants[${index}][stock]"
+                        value="0"
+                        min="0"
+                        required
+                        class="variant-stock w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <div class="mt-5 pt-5 border-t border-gray-100">
+
+                <div class="mb-3">
+
+                    <label class="block text-sm font-medium text-gray-700">
+
+                        Gambar Variant
+
+                        <span class="text-gray-400 font-normal">
+                            (opsional)
+                        </span>
+
+                    </label>
+
+                    <p class="text-xs text-gray-400 mt-1">
+
+                        Upload beberapa gambar untuk warna
+                        <strong class="variant-color-label">
+                            variant ini
+                        </strong>.
+
+                    </p>
+
+                </div>
+
+
+                <input
+                    type="file"
+                    name="variants[${index}][images][]"
+                    class="variant-images w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    accept="image/jpeg,image/png,image/jpg,image/webp"
+                    multiple
+                >
+
+
+                <p class="text-xs text-gray-400 mt-1">
+
+                    Bisa memilih banyak gambar sekaligus.
+                    Format JPG, JPEG, PNG, WEBP.
+                    Maksimal 2 MB per gambar.
+
+                </p>
+
+
+                <div class="image-preview-container mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                </div>
+
+            </div>
+
+        `;
+
+
+        variantsContainer.appendChild(row);
+
+        variantIndex++;
+
+        updateTotalStock();
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE VARIANT
+    |--------------------------------------------------------------------------
+    */
+
+    variantsContainer.addEventListener(
+        'click',
+        function (event) {
+
+            const button =
+                event.target.closest('.remove-variant');
+
             if (!button) {
                 return;
             }
-            const rows = variantsContainer.querySelectorAll('.variant-row');
+
+
+            const rows =
+                variantsContainer.querySelectorAll('.variant-row');
+
+
             if (rows.length <= 1) {
-                alert('Minimal harus ada 1 variant produk.');
+
+                alert(
+                    'Minimal harus ada 1 variant produk.'
+                );
+
                 return;
+
             }
+
+
             button.closest('.variant-row').remove();
+
             updateTotalStock();
-        });
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE TOTAL WHEN STOCK CHANGES
-        |--------------------------------------------------------------------------
-        */
-        variantsContainer.addEventListener('input', function (event) {
-            if (event.target.classList.contains('variant-stock')) {
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | STOCK CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    variantsContainer.addEventListener(
+        'input',
+        function (event) {
+
+            if (
+                event.target.classList.contains(
+                    'variant-stock'
+                )
+            ) {
+
                 updateTotalStock();
+
             }
-        });
-        /*
-        |--------------------------------------------------------------------------
-        | IMAGE PREVIEW
-        |--------------------------------------------------------------------------
-        */
-        imageInput.addEventListener('change', function () {
-            const file = this.files[0];
-            if (!file) {
-                imagePreviewContainer.classList.add('hidden');
-                imagePreview.src = '';
-                return;
+
+
+            if (
+                event.target.classList.contains(
+                    'variant-color'
+                )
+            ) {
+
+                updateColorLabel(
+                    event.target.closest('.variant-row')
+                );
+
             }
-            const maxSize = 2 * 1024 * 1024;
-            if (file.size > maxSize) {
-                alert('Ukuran gambar maksimal 2 MB.');
-                this.value = '';
-                imagePreviewContainer.classList.add('hidden');
-                imagePreview.src = '';
-                return;
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | IMAGE CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    variantsContainer.addEventListener(
+        'change',
+        function (event) {
+
+            if (
+                event.target.classList.contains(
+                    'variant-images'
+                )
+            ) {
+
+                handleImagePreview(
+                    event.target
+                );
+
             }
-            const allowedTypes = [
-                'image/jpeg',
-                'image/png',
-                'image/jpg',
-                'image/webp'
-            ];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Format gambar harus JPG, JPEG, PNG, atau WEBP.');
-                this.value = '';
-                imagePreviewContainer.classList.add('hidden');
-                imagePreview.src = '';
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                imagePreview.src = event.target.result;
-                imagePreviewContainer.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        });
-        /*
-        |--------------------------------------------------------------------------
-        | FORM SUBMIT
-        |--------------------------------------------------------------------------
-        */
-        productForm.addEventListener('submit', function (event) {
-            const rows = variantsContainer.querySelectorAll('.variant-row');
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORM SUBMIT
+    |--------------------------------------------------------------------------
+    */
+
+    productForm.addEventListener(
+        'submit',
+        function (event) {
+
+            const rows =
+                variantsContainer.querySelectorAll(
+                    '.variant-row'
+                );
+
+
             if (rows.length === 0) {
+
                 event.preventDefault();
-                alert('Minimal harus ada 1 variant produk.');
+
+                alert(
+                    'Minimal harus ada 1 variant produk.'
+                );
+
                 return;
+
             }
+
+
             let valid = true;
+
+
             rows.forEach(function (row) {
-                const color = row.querySelector('.variant-color');
-                const size = row.querySelector('.variant-size');
-                const stock = row.querySelector('.variant-stock');
+
+                const color =
+                    row.querySelector('.variant-color');
+
+                const size =
+                    row.querySelector('.variant-size');
+
+                const stock =
+                    row.querySelector('.variant-stock');
+
+
                 /*
-                | Variant minimal harus memiliki color atau size
+                | Variant harus memiliki warna atau size
                 */
+
                 if (
                     color.value.trim() === '' &&
                     size.value.trim() === ''
                 ) {
+
                     valid = false;
+
                     color.focus();
+
                 }
+
+
                 /*
                 | Stock tidak boleh negatif
                 */
 
-                if (parseInt(stock.value) < 0) {
+                if (
+                    parseInt(stock.value) < 0
+                ) {
 
                     valid = false;
 
@@ -894,37 +1193,60 @@
                 }
 
             });
+
+
             if (!valid) {
 
                 event.preventDefault();
 
-                alert('Setiap variant harus memiliki warna atau size dan stok yang valid.');
+                alert(
+                    'Setiap variant harus memiliki warna atau size dan stok yang valid.'
+                );
 
                 return;
 
             }
+
+
             /*
             | Prevent double submit
             */
 
-            submitButton.disabled = true;
+            submitButton.disabled =
+                true;
 
-            submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+            submitButton.classList.add(
+                'opacity-50',
+                'cursor-not-allowed'
+            );
 
-            submitButton.textContent = 'Menyimpan...';
+            submitButton.textContent =
+                'Menyimpan...';
+
+        }
+    );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | INITIAL
+    |--------------------------------------------------------------------------
+    */
+
+    document
+        .querySelectorAll('.variant-row')
+        .forEach(function (row) {
+
+            updateColorLabel(row);
 
         });
-        /*
-        |--------------------------------------------------------------------------
-        | INITIAL
-        |--------------------------------------------------------------------------
-        */
 
-        updateTotalStock();
 
-        updateUnit();
+    updateTotalStock();
 
-    });
+    updateUnit();
+
+});
 
 </script>
 

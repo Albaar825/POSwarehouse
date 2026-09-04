@@ -53,4 +53,5 @@ class Product extends Model
     {
         return $this->image ? asset('storage/' . $this->image) : asset('images/no-image.png');
     }
+
 }

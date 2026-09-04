@@ -21,12 +21,16 @@
 
             <a href="{{ route('products.index') }}"
                 class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
+
                 Kembali
+
             </a>
 
             <a href="{{ route('products.edit', $product) }}"
                 class="inline-flex items-center justify-center px-4 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+
                 Edit Produk
+
             </a>
 
         </div>
@@ -41,24 +45,50 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {{-- GAMBAR PRODUK --}}
+                {{-- FOTO PRODUK --}}
                 <div class="lg:col-span-1">
 
                     <p class="text-xs font-medium text-gray-500 mb-2">
                         Foto Produk
                     </p>
 
-                    <div class="w-full aspect-square max-w-sm rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
 
-                        @if ($product->image)
+                    @php
 
-                            <img src="{{ asset('storage/' . $product->image) }}"
+                        $mainImage = null;
+
+                        foreach ($product->variants as $variant) {
+
+                            $primaryImage = $variant->images
+                                ->firstWhere('is_primary', true);
+
+                            if ($primaryImage) {
+                                $mainImage = $primaryImage;
+                                break;
+                            }
+
+                            if (!$mainImage && $variant->images->first()) {
+                                $mainImage = $variant->images->first();
+                            }
+
+                        }
+
+                    @endphp
+
+
+                    <div
+                        class="w-full aspect-square max-w-sm rounded-xl bg-gray-100 overflow-hidden border border-gray-200">
+
+                        @if ($mainImage)
+
+                            <img src="{{ $mainImage->image_url }}"
                                 alt="{{ $product->name }}"
                                 class="w-full h-full object-cover">
 
                         @else
 
-                            <div class="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                            <div
+                                class="w-full h-full flex flex-col items-center justify-center text-gray-400">
 
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
@@ -69,7 +99,7 @@
 
                                     <path stroke-linecap="round"
                                         stroke-linejoin="round"
-                                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.409 2.409M3.75 19.5h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
+                                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.409 2.409M3.75 19.5h16.5a1.5 1.5 0 0 1 1.5-1.5V6a1.5 1.5 0 0 1-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
 
                                 </svg>
 
@@ -91,7 +121,7 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
 
-                        {{-- NAMA PRODUK --}}
+                        {{-- NAMA --}}
                         <div class="sm:col-span-2">
 
                             <p class="text-xs text-gray-500">
@@ -130,8 +160,11 @@
 
                                 @if ($product->category)
 
-                                    <span class="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+                                    <span
+                                        class="inline-flex px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+
                                         {{ $product->category->name }}
+
                                     </span>
 
                                 @else
@@ -155,7 +188,9 @@
                             </p>
 
                             <p class="font-semibold text-gray-800 mt-1">
+
                                 Rp {{ number_format($product->purchase_price, 0, ',', '.') }}
+
                             </p>
 
                         </div>
@@ -169,7 +204,9 @@
                             </p>
 
                             <p class="font-semibold text-gray-800 mt-1">
+
                                 Rp {{ number_format($product->price, 0, ',', '.') }}
+
                             </p>
 
                         </div>
@@ -200,7 +237,8 @@
 
                                 @if ($product->is_active)
 
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
 
                                         <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
 
@@ -210,7 +248,8 @@
 
                                 @else
 
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
 
                                         <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
 
@@ -253,7 +292,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-            {{-- STOK SAAT INI --}}
+            {{-- STOK --}}
             <div class="border border-gray-100 rounded-lg p-4">
 
                 <p class="text-xs text-gray-500">
@@ -265,10 +304,13 @@
                     @if ($product->isLowStock())
 
                         <p class="text-xl font-semibold text-red-600">
+
                             {{ $product->stock }}
+
                             <span class="text-sm font-medium">
                                 {{ $product->unit }}
                             </span>
+
                         </p>
 
                         <p class="text-xs text-red-500 mt-1">
@@ -278,10 +320,13 @@
                     @else
 
                         <p class="text-xl font-semibold text-gray-800">
+
                             {{ $product->stock }}
+
                             <span class="text-sm font-medium">
                                 {{ $product->unit }}
                             </span>
+
                         </p>
 
                         <p class="text-xs text-gray-400 mt-1">
@@ -295,7 +340,7 @@
             </div>
 
 
-            {{-- MINIMUM STOK --}}
+            {{-- MINIMUM --}}
             <div class="border border-gray-100 rounded-lg p-4">
 
                 <p class="text-xs text-gray-500">
@@ -303,10 +348,13 @@
                 </p>
 
                 <p class="text-xl font-semibold text-gray-800 mt-2">
+
                     {{ $product->min_stock }}
+
                     <span class="text-sm font-medium">
                         {{ $product->unit }}
                     </span>
+
                 </p>
 
                 <p class="text-xs text-gray-400 mt-1">
@@ -324,10 +372,13 @@
                 </p>
 
                 <p class="text-xl font-semibold text-gray-800 mt-2">
+
                     {{ $product->variants->count() }}
+
                     <span class="text-sm font-medium">
                         Variant
                     </span>
+
                 </p>
 
                 <p class="text-xs text-gray-400 mt-1">
@@ -344,14 +395,14 @@
     {{-- VARIANT PRODUK --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-5">
 
-        <div class="mb-4">
+        <div class="mb-5">
 
             <h2 class="font-semibold text-gray-800">
                 Variant Produk
             </h2>
 
             <p class="text-xs text-gray-500 mt-1">
-                Daftar variant yang dimiliki produk
+                Variant, stok, dan foto produk
             </p>
 
         </div>
@@ -359,99 +410,223 @@
 
         @if ($product->variants->count())
 
-            <div class="overflow-x-auto">
+            <div class="space-y-5">
 
-                <table class="w-full text-sm">
+                @foreach ($product->variants as $index => $variant)
 
-                    <thead>
+                    <div class="border border-gray-200 rounded-xl overflow-hidden">
 
-                        <tr class="bg-gray-50 text-gray-600 text-left">
+                        {{-- HEADER VARIANT --}}
+                        <div class="bg-gray-50 px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
 
-                            <th class="p-3">
-                                #
-                            </th>
+                            <div class="flex items-center gap-3">
 
-                            <th class="p-3">
-                                Warna
-                            </th>
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">
 
-                            <th class="p-3">
-                                Ukuran
-                            </th>
-
-                            <th class="p-3">
-                                Stok
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        @foreach ($product->variants as $index => $variant)
-
-                            <tr class="border-t hover:bg-gray-50">
-
-                                <td class="p-3 text-gray-500">
                                     {{ $index + 1 }}
-                                </td>
+
+                                </div>
+
+                                <div>
+
+                                    <p class="font-medium text-gray-800">
+
+                                        {{ $variant->label() ?: 'Variant Produk' }}
+
+                                    </p>
+
+                                    <p class="text-xs text-gray-400">
+
+                                        SKU Variant:
+                                        {{ $variant->sku_variant }}
+
+                                    </p>
+
+                                </div>
+
+                            </div>
 
 
-                                {{-- WARNA --}}
-                                <td class="p-3">
+                            <div class="text-sm">
 
-                                    @if ($variant->color)
+                                <span class="text-gray-500">
+                                    Stok:
+                                </span>
 
-                                        <span class="inline-flex px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                                            {{ $variant->color }}
-                                        </span>
+                                <span class="font-semibold text-gray-800">
 
-                                    @else
+                                    {{ $variant->stock }}
 
-                                        <span class="text-gray-400">
-                                            -
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-
-                                {{-- SIZE --}}
-                                <td class="p-3">
-
-                                    @if ($variant->size)
-
-                                        <span class="inline-flex px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                                            {{ $variant->size }}
-                                        </span>
-
-                                    @else
-
-                                        <span class="text-gray-400">
-                                            -
-                                        </span>
-
-                                    @endif
-
-                                </td>
-
-
-                                {{-- STOK --}}
-                                <td class="p-3 font-medium text-gray-800">
-                                    {{ $variant->stock ?? 0 }}
                                     {{ $product->unit }}
-                                </td>
 
-                            </tr>
+                                </span>
 
-                        @endforeach
+                            </div>
 
-                    </tbody>
+                        </div>
 
-                </table>
+
+                        {{-- ISI VARIANT --}}
+                        <div class="p-4">
+
+                            <div class="grid grid-cols-1 lg:grid-cols-4 gap-5">
+
+                                {{-- INFO --}}
+                                <div>
+
+                                    <p class="text-xs text-gray-500 mb-2">
+                                        Informasi Variant
+                                    </p>
+
+
+                                    <div class="space-y-3">
+
+                                        <div>
+
+                                            <p class="text-xs text-gray-400">
+                                                Warna
+                                            </p>
+
+                                            @if ($variant->color)
+
+                                                <span
+                                                    class="inline-flex mt-1 px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+
+                                                    {{ $variant->color }}
+
+                                                </span>
+
+                                            @else
+
+                                                <p class="text-sm text-gray-400 mt-1">
+                                                    -
+                                                </p>
+
+                                            @endif
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <p class="text-xs text-gray-400">
+                                                Ukuran
+                                            </p>
+
+                                            @if ($variant->size)
+
+                                                <span
+                                                    class="inline-flex mt-1 px-2.5 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+
+                                                    {{ $variant->size }}
+
+                                                </span>
+
+                                            @else
+
+                                                <p class="text-sm text-gray-400 mt-1">
+                                                    -
+                                                </p>
+
+                                            @endif
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <p class="text-xs text-gray-400">
+                                                Stok
+                                            </p>
+
+                                            <p class="font-semibold text-gray-800 mt-1">
+
+                                                {{ $variant->stock }}
+                                                {{ $product->unit }}
+
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                {{-- FOTO VARIANT --}}
+                                <div class="lg:col-span-3">
+
+                                    <p class="text-xs text-gray-500 mb-2">
+                                        Foto Variant
+                                    </p>
+
+
+                                    @if ($variant->images->count())
+
+                                        <div class="flex gap-3 overflow-x-auto pb-2">
+
+                                            @foreach ($variant->images as $image)
+
+                                                <div
+                                                    class="relative flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+
+                                                    <img src="{{ $image->image_url }}"
+                                                        alt="{{ $variant->label() }}"
+                                                        class="w-full h-full object-cover">
+
+                                                    @if ($image->is_primary)
+
+                                                        <span
+                                                            class="absolute top-1 left-1 px-2 py-0.5 text-[10px] font-medium bg-blue-600 text-white rounded">
+
+                                                            Utama
+
+                                                        </span>
+
+                                                    @endif
+
+                                                </div>
+
+                                            @endforeach
+
+                                        </div>
+
+                                    @else
+
+                                        <div
+                                            class="border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-400">
+
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke-width="1.5"
+                                                stroke="currentColor"
+                                                class="w-8 h-8 mx-auto mb-2">
+
+                                                <path stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.409 2.409M3.75 19.5h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Z" />
+
+                                            </svg>
+
+                                            <p class="text-xs">
+                                                Variant ini belum memiliki foto
+                                            </p>
+
+                                        </div>
+
+                                    @endif
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                @endforeach
 
             </div>
 
@@ -527,7 +702,6 @@
 
                             <tr class="border-t hover:bg-gray-50">
 
-                                {{-- TANGGAL --}}
                                 <td class="p-3 whitespace-nowrap">
 
                                     {{ $movement->created_at->format('d/m/Y H:i') }}
@@ -535,12 +709,12 @@
                                 </td>
 
 
-                                {{-- TIPE --}}
                                 <td class="p-3">
 
                                     @if ($movement->type === 'in')
 
-                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
 
                                             Masuk
 
@@ -548,7 +722,8 @@
 
                                     @elseif ($movement->type === 'out')
 
-                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
 
                                             Keluar
 
@@ -556,7 +731,8 @@
 
                                     @else
 
-                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-600">
 
                                             {{ ucfirst($movement->type) }}
 
@@ -567,7 +743,6 @@
                                 </td>
 
 
-                                {{-- JUMLAH --}}
                                 <td class="p-3 font-medium whitespace-nowrap">
 
                                     @if ($movement->type === 'in')
@@ -593,7 +768,6 @@
                                 </td>
 
 
-                                {{-- SUMBER --}}
                                 <td class="p-3">
 
                                     {{ ucfirst(str_replace('_', ' ', $movement->source)) }}
@@ -601,7 +775,6 @@
                                 </td>
 
 
-                                {{-- USER --}}
                                 <td class="p-3">
 
                                     {{ $movement->user->name ?? '-' }}
@@ -609,7 +782,6 @@
                                 </td>
 
 
-                                {{-- CATATAN --}}
                                 <td class="p-3">
 
                                     {{ $movement->note ?? '-' }}

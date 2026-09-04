@@ -19,6 +19,11 @@ return new class extends Migration
                 ->constrained()
                 ->cascadeOnDelete();
 
+            // Ditambahkan: opname sekarang dilakukan per varian (warna+size)
+            $table->foreignId('product_variant_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
             $table->integer('system_stock');
             $table->integer('physical_stock');
             $table->integer('difference');

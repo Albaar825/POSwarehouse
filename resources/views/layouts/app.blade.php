@@ -55,6 +55,83 @@
                         Stock Opname
                     </a>
                 @endif
+
+                @if (auth()->user()->isKasir())
+
+                        <p class="px-3 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            Kasir
+                        </p>
+
+                        {{-- POINT OF SALE --}}
+                        <a
+                            href="{{ route('pos.index') }}"
+                            class="hw-nav-link {{ request()->routeIs('pos.index') ? 'active' : '' }}"
+                        >
+
+                            <svg
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 3h18v4H3V3Zm2 4v14h14V7M8 11h8M8 15h5"
+                                />
+                            </svg>
+
+                            Point of Sale
+
+                        </a>
+
+                        {{-- INVOICE KREDIT --}}
+                        <a
+                            href="{{ route('pos.credit.index') }}"
+                            class="hw-nav-link {{ request()->routeIs('pos.credit.*') ? 'active' : '' }}"
+                        >
+
+                            <svg
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 14h6m-6-4h6m2 11H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2ZM9 3v2h6V3"
+                                />
+                            </svg>
+
+                            Invoice Kredit
+
+                        </a>
+
+                        {{-- RIWAYAT TRANSAKSI --}}
+                        <a
+                            href="{{ route('transactions.index') }}"
+                            class="hw-nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}"
+                        >
+
+                            <svg
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M9 5h6m-8 4h10M7 13h10M7 17h6m5 4H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2Z"
+                                />
+                            </svg>
+
+                            Riwayat Transaksi
+
+                        </a>
+
+                    @endif
             </nav>
         </aside>
 

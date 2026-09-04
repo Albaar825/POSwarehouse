@@ -72,12 +72,16 @@ Route::middleware('auth')->group(function () {
             ->name('admin.stock-opname.store');
         Route::get('/stock-opname/{stockOpname}', [StockOpnameController::class, 'show'])
             ->name('admin.stock-opname.show');
+        Route::get('/stock-opname/{stockOpname}/edit', [StockOpnameController::class, 'edit'])
+        ->name('admin.stock-opname.edit');
+        Route::put('/stock-opname/{stockOpname}', [StockOpnameController::class, 'update'])
+        ->name('admin.stock-opname.update');
     });
 
     /*
     |--------------------------------------------------------------------------
     | Kasir Routes
-    | 
+    |
     |--------------------------------------------------------------------------
     */
 
@@ -94,6 +98,15 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/transactions', [TransactionController::class, 'history'])
             ->name('transactions.index');
+
+        Route::get('/pos/credit', [TransactionController::class, 'creditIndex'])
+            ->name('pos.credit.index');
+
+        Route::get('/pos/credit/{transaction}', [TransactionController::class, 'creditShow'])
+            ->name('pos.credit.show');
+
+        Route::post('/pos/credit/{transaction}/payment', [TransactionController::class, 'creditPayment'])
+            ->name('pos.credit.payment');
     });
 
 });

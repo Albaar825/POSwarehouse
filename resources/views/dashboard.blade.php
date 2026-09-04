@@ -519,287 +519,204 @@
 @endsection
 
 
-@push('scripts')
+@if (auth()->user()->isAdmin())
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    @push('scripts')
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    /*
-    |--------------------------------------------------------------------------
-    | COMMON OPTIONS
-    |--------------------------------------------------------------------------
-    */
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
 
-    const chartFont = {
-        family: 'Inter, sans-serif'
-    };
+            const salesCanvas = document.getElementById('salesChart');
 
+            if (salesCanvas) {
+                new Chart(salesCanvas, {
+                    type: 'line',
 
-    /*
-    |--------------------------------------------------------------------------
-    | SALES CHART
-    |--------------------------------------------------------------------------
-    */
+                    data: {
+                        labels: @json($sales_labels),
 
-    const salesCanvas = document.getElementById('salesChart');
-
-    if (salesCanvas) {
-
-        new Chart(salesCanvas, {
-            type: 'line',
-
-            data: {
-                labels: @json($sales_labels),
-
-                datasets: [{
-                    label: 'Penjualan',
-
-                    data: @json($sales_data),
-
-                    tension: 0.4,
-
-                    fill: true,
-
-                    borderWidth: 2,
-
-                    pointRadius: 4,
-
-                    pointHoverRadius: 6
-                }]
-            },
-
-            options: {
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-
-                plugins: {
-                    legend: {
-                        display: false
+                        datasets: [{
+                            label: 'Penjualan',
+                            data: @json($sales_data),
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
                     },
 
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return 'Rp ' +
-                                    new Intl.NumberFormat('id-ID')
-                                        .format(context.raw);
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return 'Rp ' +
+                                            new Intl.NumberFormat('id-ID')
+                                                .format(context.raw);
+                                    }
+                                }
+                            }
+                        },
+
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+
+                                ticks: {
+                                    callback: function (value) {
+                                        return 'Rp ' +
+                                            new Intl.NumberFormat('id-ID')
+                                                .format(value);
+                                    }
+                                }
                             }
                         }
                     }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: true,
-
-                        ticks: {
-                            callback: function (value) {
-                                return 'Rp ' +
-                                    new Intl.NumberFormat('id-ID')
-                                        .format(value);
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | TRANSACTION CHART
-    |--------------------------------------------------------------------------
-    */
-
-    const transactionCanvas =
-        document.getElementById('transactionChart');
-
-    if (transactionCanvas) {
-
-        new Chart(transactionCanvas, {
-
-            type: 'bar',
-
-            data: {
-                labels: @json($sales_labels),
-
-                datasets: [{
-                    label: 'Transaksi',
-
-                    data: @json($transaction_data),
-
-                    borderRadius: 6
-                }]
-            },
-
-            options: {
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: true,
-
-                        ticks: {
-                            precision: 0
-                        }
-                    }
-                }
+                });
             }
 
-        });
 
-    }
+            const transactionCanvas =
+                document.getElementById('transactionChart');
 
+            if (transactionCanvas) {
+                new Chart(transactionCanvas, {
+                    type: 'bar',
 
-    /*
-    |--------------------------------------------------------------------------
-    | CATEGORY CHART
-    |--------------------------------------------------------------------------
-    */
+                    data: {
+                        labels: @json($sales_labels),
 
-    const categoryCanvas =
-        document.getElementById('categoryChart');
-
-    if (categoryCanvas) {
-
-        new Chart(categoryCanvas, {
-
-            type: 'doughnut',
-
-            data: {
-
-                labels: @json($category_labels),
-
-                datasets: [{
-                    data: @json($category_data),
-
-                    borderWidth: 2
-                }]
-
-            },
-
-            options: {
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                cutout: '65%',
-
-                plugins: {
-
-                    legend: {
-                        position: 'bottom'
+                        datasets: [{
+                            label: 'Transaksi',
+                            data: @json($transaction_data),
+                            borderRadius: 6
+                        }]
                     },
 
-                    tooltip: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
 
-                        callbacks: {
-
-                            label: function (context) {
-
-                                return 'Rp ' +
-                                    new Intl.NumberFormat('id-ID')
-                                        .format(context.raw);
-
+                        plugins: {
+                            legend: {
+                                display: false
                             }
+                        },
 
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
                         }
-
                     }
+                });
+            }
 
-                }
 
+            const categoryCanvas =
+                document.getElementById('categoryChart');
+
+            if (categoryCanvas) {
+                new Chart(categoryCanvas, {
+                    type: 'doughnut',
+
+                    data: {
+                        labels: @json($category_labels),
+
+                        datasets: [{
+                            data: @json($category_data),
+                            borderWidth: 2
+                        }]
+                    },
+
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '65%',
+
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return 'Rp ' +
+                                            new Intl.NumberFormat('id-ID')
+                                                .format(context.raw);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+            const topProductCanvas =
+                document.getElementById('topProductChart');
+
+            if (topProductCanvas) {
+                new Chart(topProductCanvas, {
+                    type: 'bar',
+
+                    data: {
+                        labels: @json($top_product_labels),
+
+                        datasets: [{
+                            label: 'Terjual',
+                            data: @json($top_product_data),
+                            borderRadius: 6
+                        }]
+                    },
+
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
             }
 
         });
+        </script>
 
-    }
+    @endpush
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | TOP PRODUCT CHART
-    |--------------------------------------------------------------------------
-    */
-
-    const topProductCanvas =
-        document.getElementById('topProductChart');
-
-    if (topProductCanvas) {
-
-        new Chart(topProductCanvas, {
-
-            type: 'bar',
-
-            data: {
-
-                labels: @json($top_product_labels),
-
-                datasets: [{
-                    label: 'Terjual',
-
-                    data: @json($top_product_data),
-
-                    borderRadius: 6
-                }]
-
-            },
-
-            options: {
-
-                indexAxis: 'y',
-
-                responsive: true,
-
-                maintainAspectRatio: false,
-
-                plugins: {
-
-                    legend: {
-                        display: false
-                    }
-
-                },
-
-                scales: {
-
-                    x: {
-                        beginAtZero: true,
-
-                        ticks: {
-                            precision: 0
-                        }
-
-                    }
-
-                }
-
-            }
-
-        });
-
-    }
-
-});
-</script>
-
-@endpush
+@endif

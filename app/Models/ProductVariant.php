@@ -2,10 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProductVariant extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'product_id',
         'color',
@@ -14,18 +20,54 @@ class ProductVariant extends Model
         'stock',
     ];
 
-    public function product()
+    protected $casts = [
+        'stock' => 'integer',
+    ];
+
+    /**
+     * Relasi ke product
+     */
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
-    public function stockMovements()
+    /**
+     * Semua gambar variant
+     */
+    public function images(): HasMany
     {
-        return $this->hasMany(StockMovement::class);
+        return $this->hasMany(
+            ProductVariantImage::class,
+            'product_variant_id'
+        )->orderBy('sort_order');
     }
 
+    /**
+     * Gambar utama variant
+     */
+    public function primaryImage(): HasOne
+    {
+        return $this->hasOne(
+            ProductVariantImage::class,
+            'product_variant_id'
+        )->where('is_primary', true);
+    }
+
+    /**
+     * Label variant
+     *
+     * Contoh:
+     * Hitam / M
+     * Putih / L
+     */
     public function label(): string
     {
-        return trim(($this->color ?? '-') . ' / ' . ($this->size ?? '-'), ' /');
+        return collect([
+            $this->color,
+            $this->size,
+        ])
+            ->filter(fn ($value) => filled($value))
+            ->implode(' / ');
     }
 }

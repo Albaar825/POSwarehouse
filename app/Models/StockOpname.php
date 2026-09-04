@@ -13,9 +13,10 @@ class StockOpname extends Model
         'note',
     ];
 
-    protected $casts = [
-        'opname_date' => 'date',
-    ];
+    protected function casts(): array
+    {
+        return ['opname_date' => 'date'];
+    }
 
     public function user()
     {
@@ -25,5 +26,10 @@ class StockOpname extends Model
     public function details()
     {
         return $this->hasMany(StockOpnameDetail::class);
+    }
+
+    public function totalDifference(): int
+    {
+        return $this->details->sum('difference');
     }
 }

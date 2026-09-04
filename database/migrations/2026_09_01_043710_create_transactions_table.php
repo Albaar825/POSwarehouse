@@ -10,12 +10,52 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
+
+            // Invoice
             $table->string('invoice_number')->unique();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // kasir yang input
-            $table->unsignedBigInteger('total')->default(0);
-            $table->unsignedBigInteger('paid')->default(0);
-            $table->unsignedBigInteger('change')->default(0);
-            $table->enum('payment_method', ['cash', 'qris'])->default('cash');
+
+            // Kasir
+            $table->foreignId('user_id')
+                ->constrained()
+                ->cascadeOnDelete();
+
+            // Customer
+            $table->foreignId('customer_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
+            // Total transaksi
+            $table->unsignedBigInteger('total')
+                ->default(0);
+
+            // Total yang sudah dibayar
+            $table->unsignedBigInteger('paid')
+                ->default(0);
+
+            // Kembalian
+            $table->unsignedBigInteger('change')
+                ->default(0);
+
+            // Metode pembayaran
+            $table->enum('payment_method', [
+                'cash',
+                'qris',
+                'credit',
+            ])->default('cash');
+
+            // Status invoice
+            $table->enum('status', [
+                'paid',
+                'partial',
+                'on_hold',
+                'cancelled',
+            ])->default('paid');
+
+            // Jatuh tempo pembayaran
+            $table->date('due_date')
+                ->nullable();
+
             $table->timestamps();
         });
     }

@@ -9,6 +9,7 @@ class StockOpnameDetail extends Model
     protected $fillable = [
         'stock_opname_id',
         'product_id',
+        'product_variant_id',
         'system_stock',
         'physical_stock',
         'difference',
@@ -23,5 +24,10 @@ class StockOpnameDetail extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variant()
+    {
+        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 }

@@ -2,34 +2,68 @@
 
 @section('title', 'Point of Sale')
 
+@push('head')
+    <link rel="stylesheet" href="{{ asset('css/pos.css') }}">
+@endpush
+
 @section('content')
 
 <div
     x-data="posApp()"
-    class="space-y-5"
+    class="pos-page"
 >
 
     {{-- ========================================================= --}}
     {{-- HEADER --}}
     {{-- ========================================================= --}}
 
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="pos-header">
 
         <div>
-            <h2 class="text-xl font-bold text-gray-900">
-                Point of Sale
-            </h2>
+            <div class="pos-title-row">
+                <div class="pos-title-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.8"
+                            d="M3 10h18M5 10v9h14v-9M4 6h16l1 4H3l1-4Z"
+                        />
+                    </svg>
+                </div>
 
-            <p class="text-sm text-gray-500">
-                Kelola transaksi penjualan
-            </p>
+                <div>
+                    <h1 class="pos-title">
+                        Point of Sale
+                    </h1>
+
+                    <p class="pos-subtitle">
+                        Kelola transaksi penjualan dengan mudah
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <div class="text-sm text-gray-500">
-            Kasir:
-            <span class="font-semibold text-gray-800">
-                {{ auth()->user()->name }}
+        <div class="pos-cashier">
+            <span class="pos-cashier-label">
+                Kasir
             </span>
+
+            <div class="pos-cashier-user">
+                <div class="pos-avatar">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+
+                <div>
+                    <p class="pos-cashier-name">
+                        {{ auth()->user()->name }}
+                    </p>
+
+                    <p class="pos-cashier-role">
+                        Kasir
+                    </p>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -39,21 +73,27 @@
     {{-- SEARCH --}}
     {{-- ========================================================= --}}
 
-    <div class="bg-white border border-gray-200 rounded-xl p-4">
+    <div class="pos-search-card">
 
-        <div class="relative">
+        <div class="pos-search">
 
             <svg
-                class="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
-                fill="none"
+                class="pos-search-icon"
                 viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
             >
+                <circle
+                    cx="11"
+                    cy="11"
+                    r="7"
+                    stroke-width="1.8"
+                />
+
                 <path
                     stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.05 6.05a7.5 7.5 0 0 0 10.6 10.6Z"
+                    stroke-width="1.8"
+                    d="m20 20-4-4"
                 />
             </svg>
 
@@ -61,8 +101,12 @@
                 type="text"
                 x-model="search"
                 placeholder="Cari nama produk atau SKU..."
-                class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none"
             >
+
+            <div class="pos-search-shortcut">
+                <span>⌘</span>
+                <span>K</span>
+            </div>
 
         </div>
 
@@ -70,510 +114,831 @@
 
 
     {{-- ========================================================= --}}
-    {{-- MAIN GRID --}}
+    {{-- MAIN CONTENT --}}
     {{-- ========================================================= --}}
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+    <div class="pos-layout">
 
 
         {{-- ===================================================== --}}
-        {{-- PRODUK --}}
+        {{-- PRODUCT SECTION --}}
         {{-- ===================================================== --}}
 
-        <div class="xl:col-span-2">
+        <section class="pos-products-section">
 
-            <div class="bg-white border border-gray-200 rounded-xl">
+            <div class="pos-section-header">
 
-                <div class="p-4 border-b border-gray-200">
+                <div>
+                    <h2 class="pos-section-title">
+                        Produk
+                    </h2>
 
-                    <div class="flex items-center justify-between">
-
-                        <div>
-
-                            <h3 class="font-semibold text-gray-900">
-                                Produk
-                            </h3>
-
-                            <p class="text-xs text-gray-500">
-                                Pilih produk yang ingin dijual
-                            </p>
-
-                        </div>
-
-                        <span class="text-xs text-gray-500">
-                            {{ $products->count() }} produk
-                        </span>
-
-                    </div>
-
+                    <p class="pos-section-description">
+                        Pilih produk yang ingin dijual
+                    </p>
                 </div>
 
-
-                <div class="p-4">
-
-                    @if ($products->count())
-
-                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-
-                            @foreach ($products as $product)
-
-                                <button
-                                    type="button"
-                                    @click="openVariant({{ $product->id }})"
-                                    x-show="matches(
-                                        '{{ strtolower(addslashes($product->name)) }}',
-                                        '{{ strtolower(addslashes($product->sku)) }}'
-                                    )"
-                                    class="text-left border border-gray-200 rounded-xl overflow-hidden hover:border-gray-400 hover:shadow-sm transition bg-white"
-                                >
-
-                                    {{-- PRODUCT IMAGE --}}
-
-                                    <div class="aspect-square bg-gray-100 overflow-hidden">
-
-                                        @php
-                                            $productJson = $productsJson->firstWhere('id', $product->id);
-                                            $productImage = $productJson['image'] ?? null;
-                                        @endphp
-
-                                        @if ($productImage)
-
-                                            <img
-                                                src="{{ $productImage }}"
-                                                alt="{{ $product->name }}"
-                                                class="w-full h-full object-cover"
-                                            >
-
-                                        @else
-
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-
-                                                <svg
-                                                    class="w-10 h-10"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                    stroke="currentColor"
-                                                >
-                                                    <path
-                                                        stroke-linecap="round"
-                                                        stroke-linejoin="round"
-                                                        stroke-width="1.5"
-                                                        d="M4 16l4-4a3 3 0 014 0l2 2 1-1a3 3 0 014 0l1 1M5 20h14a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z"
-                                                    />
-                                                </svg>
-
-                                            </div>
-
-                                        @endif
-
-                                    </div>
-
-
-                                    {{-- PRODUCT INFO --}}
-
-                                    <div class="p-3">
-
-                                        <p class="font-semibold text-sm text-gray-900 line-clamp-2">
-                                            {{ $product->name }}
-                                        </p>
-
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            {{ $product->sku }}
-                                        </p>
-
-                                        <p class="font-bold text-sm text-gray-900 mt-2">
-                                            Rp {{ number_format($product->price, 0, ',', '.') }}
-                                        </p>
-
-                                        <p class="text-xs text-green-600 mt-1">
-                                            Stok {{ $product->stock }} {{ $product->unit }}
-                                        </p>
-
-                                    </div>
-
-                                </button>
-
-                            @endforeach
-
-                        </div>
-
-                    @else
-
-                        <div class="py-12 text-center text-gray-500">
-                            Tidak ada produk tersedia.
-                        </div>
-
-                    @endif
-
+                <div class="pos-product-count">
+                    <span>
+                        {{ $products->count() }}
+                    </span>
+                    Produk
                 </div>
 
             </div>
 
-        </div>
+
+            {{-- PRODUCT LIST --}}
+
+            <div class="pos-product-area">
+
+                @if ($products->count())
+
+                    <div class="pos-product-list">
+
+                        @foreach ($products as $product)
+
+                            @php
+                                $productJson = $productsJson->firstWhere(
+                                    'id',
+                                    $product->id
+                                );
+
+                                $productImage = $productJson['image'] ?? null;
+                            @endphp
+
+                            <button
+                                type="button"
+                                @click="openVariant({{ $product->id }})"
+                                x-show="matches(
+                                    '{{ strtolower(addslashes($product->name)) }}',
+                                    '{{ strtolower(addslashes($product->sku)) }}'
+                                )"
+                                class="pos-product-card-horizontal"
+                            >
+
+                                {{-- IMAGE --}}
+
+                                <div class="pos-product-h-image">
+
+                                    @if ($productImage)
+
+                                        <img
+                                            src="{{ $productImage }}"
+                                            alt="{{ $product->name }}"
+                                        >
+
+                                    @else
+
+                                        <div class="pos-no-image-h">
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                            >
+                                                <rect
+                                                    x="3"
+                                                    y="4"
+                                                    width="18"
+                                                    height="16"
+                                                    rx="2"
+                                                    stroke-width="1.5"
+                                                />
+
+                                                <circle
+                                                    cx="8"
+                                                    cy="9"
+                                                    r="1.5"
+                                                    stroke-width="1.5"
+                                                />
+
+                                                <path
+                                                    stroke-width="1.5"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    d="m4 17 4-4 3 3 2-2 5 5"
+                                                />
+                                            </svg>
+
+                                        </div>
+
+                                    @endif
+
+                                    {{-- CART BADGE --}}
+
+                                    <span class="pos-cart-badge-h">
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 4a2 2 0 11-4 0 2 2 0 014 0z"
+                                            />
+                                        </svg>
+                                    </span>
+
+                                </div>
 
 
-        {{-- ===================================================== --}}
-        {{-- KERANJANG --}}
-        {{-- ===================================================== --}}
+                                {{-- INFO --}}
 
-        <div>
+                                <div class="pos-product-h-content">
 
-            <div class="bg-white border border-gray-200 rounded-xl sticky top-20">
+                                    <div class="pos-product-h-header">
+
+                                        <p class="pos-product-h-name">
+                                            {{ $product->name }}
+                                        </p>
+
+                                        <p class="pos-product-h-price">
+                                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                                        </p>
+
+                                    </div>
 
 
-                {{-- CART HEADER --}}
+                                    <div class="pos-product-h-footer">
 
-                <div class="p-4 border-b border-gray-200">
+                                        <div>
+                                            <p class="pos-product-h-sku">
+                                                SKU {{ $product->sku }}
+                                            </p>
 
-                    <div class="flex items-center justify-between">
+                                            <p class="pos-product-h-stock">
+                                                Stok {{ $product->stock }} {{ $product->unit }}
+                                            </p>
+                                        </div>
 
-                        <div>
+                                        <span class="pos-add-btn-h">
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M12 5v14M5 12h14"
+                                                />
+                                            </svg>
+                                        </span>
 
-                            <h3 class="font-semibold text-gray-900">
-                                Keranjang
-                            </h3>
+                                    </div>
 
-                            <p class="text-xs text-gray-500">
-                                <span x-text="cart.length"></span> item
-                            </p>
+                                </div>
 
+                            </button>
+
+                        @endforeach
+
+                    </div>
+
+                    {{-- NO SEARCH RESULT --}}
+
+                    <div
+                        x-show="search && !hasVisibleProducts()"
+                        x-cloak
+                        class="pos-empty-products"
+                    >
+
+                        <div class="pos-empty-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                            >
+                                <circle
+                                    cx="11"
+                                    cy="11"
+                                    r="7"
+                                    stroke-width="1.5"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-width="1.5"
+                                    d="m20 20-4-4"
+                                />
+                            </svg>
                         </div>
 
-                        <button
-                            type="button"
-                            x-show="cart.length"
-                            @click="clearCart()"
-                            class="text-xs text-red-600 hover:text-red-700"
-                        >
-                            Kosongkan
-                        </button>
+                        <h3>
+                            Produk tidak ditemukan
+                        </h3>
 
+                        <p>
+                            Coba gunakan nama produk atau SKU yang berbeda.
+                        </p>
+
+                    </div>
+
+                @else
+
+                    <div class="pos-empty-products">
+
+                        <div class="pos-empty-icon">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                            >
+                                <rect
+                                    x="3"
+                                    y="4"
+                                    width="18"
+                                    height="16"
+                                    rx="2"
+                                    stroke-width="1.5"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-width="1.5"
+                                    d="M8 9h8M8 13h5"
+                                />
+                            </svg>
+                        </div>
+
+                        <h3>
+                            Tidak ada produk
+                        </h3>
+
+                        <p>
+                            Belum ada produk yang tersedia untuk transaksi.
+                        </p>
+
+                    </div>
+
+                @endif
+
+            </div>
+
+        </section>
+
+
+        {{-- ===================================================== --}}
+        {{-- CART --}}
+        {{-- ===================================================== --}}
+
+        <aside class="pos-cart-card">
+
+            {{-- CART HEADER --}}
+
+            <div class="pos-cart-header">
+
+                <div class="pos-cart-title-wrapper">
+
+                    <div class="pos-cart-icon">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="1.7"
+                                d="M3 4h2l1.5 10h11L21 7H6"
+                            />
+
+                            <circle
+                                cx="9"
+                                cy="19"
+                                r="1.3"
+                                stroke-width="1.7"
+                            />
+
+                            <circle
+                                cx="18"
+                                cy="19"
+                                r="1.3"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2>
+                            Keranjang
+                        </h2>
+
+                        <p>
+                            <span x-text="cart.length"></span>
+                            item
+                        </p>
                     </div>
 
                 </div>
 
+                <button
+                    type="button"
+                    x-show="cart.length"
+                    x-cloak
+                    @click="clearCart()"
+                    class="pos-clear-cart"
+                >
+                    Kosongkan
+                </button>
 
-                {{-- CART ITEMS --}}
+            </div>
 
-                <div class="max-h-[420px] overflow-y-auto">
 
-                    <template x-if="cart.length === 0">
+            {{-- CART ITEMS --}}
 
-                        <div class="py-14 text-center px-5">
+            <div class="pos-cart-items">
 
-                            <div class="w-14 h-14 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
+                <template x-if="cart.length === 0">
 
-                                <svg
-                                    class="w-7 h-7 text-gray-400"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                    <div class="pos-empty-cart">
+
+                        <div class="pos-empty-cart-icon">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="1.6"
+                                    d="M3 4h2l1.5 10h11L21 7H6"
+                                />
+
+                                <circle
+                                    cx="9"
+                                    cy="19"
+                                    r="1.3"
+                                    stroke-width="1.6"
+                                />
+
+                                <circle
+                                    cx="18"
+                                    cy="19"
+                                    r="1.3"
+                                    stroke-width="1.6"
+                                />
+                            </svg>
+
+                        </div>
+
+                        <h3>
+                            Keranjang masih kosong
+                        </h3>
+
+                        <p>
+                            Pilih produk untuk memulai transaksi.
+                        </p>
+
+                    </div>
+
+                </template>
+
+
+                <div class="pos-cart-list">
+
+                    <template
+                        x-for="(item, index) in cart"
+                        :key="item.key"
+                    >
+
+                        <div class="pos-cart-item">
+
+                            <div class="pos-cart-item-main">
+
+                                <div class="pos-cart-image">
+
+                                    <img
+                                        :src="item.image"
+                                        alt=""
+                                    >
+
+                                </div>
+
+                                <div class="pos-cart-info">
+
+                                    <p
+                                        class="pos-cart-item-name"
+                                        x-text="item.name"
+                                    ></p>
+
+                                    <p
+                                        class="pos-cart-item-variant"
+                                        x-text="item.variant"
+                                    ></p>
+
+                                    <p
+                                        class="pos-cart-item-price"
+                                        x-text="formatRupiah(item.price)"
+                                    ></p>
+
+                                </div>
+
+                                <button
+                                    type="button"
+                                    @click="removeItem(index)"
+                                    class="pos-remove-item"
                                 >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13 5.4 5M7 13l-2 2h13m-5 4a1 1 0 1 1-2 0m8 0a1 1 0 1 1-2 0"
-                                    />
-                                </svg>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="1.7"
+                                            d="M6 7h12M10 11v6M14 11v6M8 7l1-3h6l1 3m2 0-1 13H7L6 7"
+                                        />
+                                    </svg>
+                                </button>
 
                             </div>
 
-                            <p class="mt-3 text-sm text-gray-500">
-                                Keranjang masih kosong
-                            </p>
+
+                            <div class="pos-cart-item-bottom">
+
+                                <div class="pos-quantity">
+
+                                    <button
+                                        type="button"
+                                        @click="decrease(index)"
+                                    >
+                                        −
+                                    </button>
+
+                                    <span
+                                        x-text="item.quantity"
+                                    ></span>
+
+                                    <button
+                                        type="button"
+                                        @click="increase(index)"
+                                    >
+                                        +
+                                    </button>
+
+                                </div>
+
+                                <p
+                                    class="pos-cart-item-total"
+                                    x-text="formatRupiah(item.price * item.quantity)"
+                                ></p>
+
+                            </div>
 
                         </div>
 
                     </template>
 
+                </div>
 
-                    <div class="divide-y divide-gray-100">
-
-                        <template
-                            x-for="(item, index) in cart"
-                            :key="item.key"
-                        >
-
-                            <div class="p-4">
-
-                                <div class="flex gap-3">
-
-                                    <img
-                                        :src="item.image"
-                                        class="w-14 h-14 rounded-lg object-cover bg-gray-100"
-                                        alt=""
-                                    >
-
-                                    <div class="flex-1 min-w-0">
-
-                                        <p
-                                            class="font-semibold text-sm text-gray-900 truncate"
-                                            x-text="item.name"
-                                        ></p>
-
-                                        <p
-                                            class="text-xs text-gray-500 mt-1"
-                                            x-text="item.variant"
-                                        ></p>
-
-                                        <p
-                                            class="text-xs text-gray-500"
-                                            x-text="formatRupiah(item.price)"
-                                        ></p>
-
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        @click="removeItem(index)"
-                                        class="text-gray-400 hover:text-red-500"
-                                    >
-                                        ×
-                                    </button>
-
-                                </div>
+            </div>
 
 
-                                <div class="flex items-center justify-between mt-3">
+            {{-- CHECKOUT --}}
 
-                                    <div class="flex items-center border border-gray-200 rounded-lg">
+            <div class="pos-checkout">
 
-                                        <button
-                                            type="button"
-                                            @click="decrease(index)"
-                                            class="w-8 h-8 text-gray-600 hover:bg-gray-100"
-                                        >
-                                            −
-                                        </button>
+                {{-- TOTAL --}}
 
-                                        <span
-                                            class="w-8 text-center text-sm font-semibold"
-                                            x-text="item.quantity"
-                                        ></span>
+                <div class="pos-total-row">
 
-                                        <button
-                                            type="button"
-                                            @click="increase(index)"
-                                            class="w-8 h-8 text-gray-600 hover:bg-gray-100"
-                                        >
-                                            +
-                                        </button>
+                    <div>
+                        <span class="pos-total-label">
+                            Total Pembayaran
+                        </span>
 
-                                    </div>
-
-                                    <p
-                                        class="font-bold text-sm"
-                                        x-text="formatRupiah(item.price * item.quantity)"
-                                    ></p>
-
-                                </div>
-
-                            </div>
-
-                        </template>
-
+                        <span class="pos-total-items">
+                            <span x-text="cart.length"></span>
+                            item
+                        </span>
                     </div>
+
+                    <span
+                        class="pos-total-price"
+                        x-text="formatRupiah(total)"
+                    ></span>
 
                 </div>
 
 
-                {{-- ================================================= --}}
-                {{-- CHECKOUT --}}
-                {{-- ================================================= --}}
-
-                <div class="p-4 border-t border-gray-200 space-y-4">
+                <div class="pos-divider"></div>
 
 
-                    {{-- TOTAL --}}
+                <form
+                    method="POST"
+                    action="{{ route('pos.store') }}"
+                    @submit="prepareSubmit($event)"
+                >
 
-                    <div class="flex items-center justify-between">
+                    @csrf
 
-                        <span class="text-sm text-gray-500">
-                            Total
-                        </span>
+                    <div id="checkout-items"></div>
 
-                        <span
-                            class="text-xl font-bold text-gray-900"
-                            x-text="formatRupiah(total)"
-                        ></span>
+
+                    {{-- PAYMENT METHOD --}}
+
+                    <div class="pos-form-group">
+
+                        <label class="pos-form-label">
+                            Metode Pembayaran
+                        </label>
+
+                        <div class="pos-payment-grid">
+
+                            {{-- CASH --}}
+
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'cash'; paid = 0"
+                                :class="paymentMethod === 'cash'
+                                    ? 'pos-payment-active'
+                                    : ''"
+                                class="pos-payment-button"
+                            >
+                                <span class="pos-payment-icon">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="6"
+                                            width="18"
+                                            height="12"
+                                            rx="2"
+                                            stroke-width="1.6"
+                                        />
+
+                                        <circle
+                                            cx="12"
+                                            cy="12"
+                                            r="2.5"
+                                            stroke-width="1.6"
+                                        />
+                                    </svg>
+                                </span>
+
+                                Cash
+                            </button>
+
+
+                            {{-- QRIS --}}
+
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'qris'; paid = total"
+                                :class="paymentMethod === 'qris'
+                                    ? 'pos-payment-active'
+                                    : ''"
+                                class="pos-payment-button"
+                            >
+                                <span class="pos-payment-icon">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                    >
+                                        <rect
+                                            x="4"
+                                            y="4"
+                                            width="6"
+                                            height="6"
+                                            stroke-width="1.6"
+                                        />
+
+                                        <rect
+                                            x="14"
+                                            y="4"
+                                            width="6"
+                                            height="6"
+                                            stroke-width="1.6"
+                                        />
+
+                                        <rect
+                                            x="4"
+                                            y="14"
+                                            width="6"
+                                            height="6"
+                                            stroke-width="1.6"
+                                        />
+
+                                        <path
+                                            stroke-width="1.6"
+                                            d="M14 14h2v2h-2zM18 14h2v6h-6v-2M18 18h2"
+                                        />
+                                    </svg>
+                                </span>
+
+                                QRIS
+                            </button>
+
+
+                            {{-- CREDIT --}}
+
+                            <button
+                                type="button"
+                                @click="paymentMethod = 'credit'; paid = 0"
+                                :class="paymentMethod === 'credit'
+                                    ? 'pos-payment-active'
+                                    : ''"
+                                class="pos-payment-button"
+                            >
+                                <span class="pos-payment-icon">
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="5"
+                                            width="18"
+                                            height="14"
+                                            rx="2"
+                                            stroke-width="1.6"
+                                        />
+
+                                        <path
+                                            stroke-width="1.6"
+                                            d="M3 9h18M7 14h4"
+                                        />
+                                    </svg>
+                                </span>
+
+                                Kredit
+                            </button>
+
+                        </div>
+
+                        <input
+                            type="hidden"
+                            name="payment_method"
+                            :value="paymentMethod"
+                        >
 
                     </div>
 
 
-                    <form
-                        method="POST"
-                        action="{{ route('pos.store') }}"
-                        @submit="prepareSubmit($event)"
+                    {{-- CREDIT CUSTOMER --}}
+
+                    <div
+                        x-show="paymentMethod === 'credit'"
+                        x-cloak
+                        class="pos-credit-box"
                     >
 
-                        @csrf
+                        <div class="pos-credit-header">
 
-                        <div id="checkout-items"></div>
-
-
-                        {{-- PAYMENT METHOD --}}
-
-                        <div class="space-y-2">
-
-                            <label class="text-sm font-medium text-gray-700">
-                                Metode Pembayaran
-                            </label>
-
-                            <div class="grid grid-cols-3 gap-2">
-
-
-                                {{-- CASH --}}
-
-                                <button
-                                    type="button"
-                                    @click="paymentMethod = 'cash'; paid = 0"
-                                    :class="paymentMethod === 'cash'
-                                        ? 'bg-gray-900 text-white border-gray-900'
-                                        : 'bg-white text-gray-700 border-gray-200'"
-                                    class="border rounded-lg py-2.5 text-sm font-medium"
+                            <div class="pos-credit-icon">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
                                 >
-                                    Cash
-                                </button>
-
-
-                                {{-- QRIS --}}
-
-                                <button
-                                    type="button"
-                                    @click="paymentMethod = 'qris'; paid = total"
-                                    :class="paymentMethod === 'qris'
-                                        ? 'bg-gray-900 text-white border-gray-900'
-                                        : 'bg-white text-gray-700 border-gray-200'"
-                                    class="border rounded-lg py-2.5 text-sm font-medium"
-                                >
-                                    QRIS
-                                </button>
-
-
-                                {{-- CREDIT --}}
-
-                                <button
-                                    type="button"
-                                    @click="paymentMethod = 'credit'; paid = 0"
-                                    :class="paymentMethod === 'credit'
-                                        ? 'bg-gray-900 text-white border-gray-900'
-                                        : 'bg-white text-gray-700 border-gray-200'"
-                                    class="border rounded-lg py-2.5 text-sm font-medium"
-                                >
-                                    Kredit
-                                </button>
-
+                                    <path
+                                        stroke-width="1.7"
+                                        stroke-linecap="round"
+                                        d="M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+                                    />
+                                </svg>
                             </div>
 
+                            <div>
+                                <h3>
+                                    Informasi Customer
+                                </h3>
+
+                                <p>
+                                    Lengkapi data untuk transaksi kredit
+                                </p>
+                            </div>
+
+                        </div>
+
+
+                        {{-- NAMA --}}
+
+                        <div class="pos-input-group">
+
+                            <label>
+                                Nama Customer
+                            </label>
+
                             <input
-                                type="hidden"
-                                name="payment_method"
-                                :value="paymentMethod"
+                                type="text"
+                                name="customer_name"
+                                x-model="customerName"
+                                :required="paymentMethod === 'credit'"
+                                placeholder="Masukkan nama customer"
                             >
 
                         </div>
 
 
-                        {{-- ================================================= --}}
-                        {{-- CUSTOMER CREDIT --}}
-                        {{-- ================================================= --}}
+                        {{-- PHONE --}}
 
-                        <div
-                            x-show="paymentMethod === 'credit'"
-                            x-cloak
-                            class="space-y-3"
-                        >
+                        <div class="pos-input-group">
 
-                            {{-- NAMA --}}
+                            <label>
+                                No. HP Customer
+                            </label>
 
-                            <div class="space-y-2">
-
-                                <label class="text-sm font-medium text-gray-700">
-                                    Nama Customer
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="customer_name"
-                                    x-model="customerName"
-                                    :required="paymentMethod === 'credit'"
-                                    class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                    placeholder="Masukkan nama customer"
-                                >
-
-                            </div>
-
-
-                            {{-- NOMOR HP --}}
-
-                            <div class="space-y-2">
-
-                                <label class="text-sm font-medium text-gray-700">
-                                    No. HP Customer
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="customer_phone"
-                                    x-model="customerPhone"
-                                    :required="paymentMethod === 'credit'"
-                                    class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                    placeholder="Masukkan nomor HP customer"
-                                >
-
-                            </div>
-
-
-                            {{-- JATUH TEMPO --}}
-
-                            <div class="space-y-2">
-
-                                <label class="text-sm font-medium text-gray-700">
-                                    Jatuh Tempo
-                                </label>
-
-                                <input
-                                    type="date"
-                                    name="due_date"
-                                    x-model="dueDate"
-                                    :required="paymentMethod === 'credit'"
-                                    min="{{ date('Y-m-d') }}"
-                                    class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                >
-
-                            </div>
-
-
-                            {{-- INFO --}}
-
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-3">
-
-                                <p class="text-sm font-medium text-yellow-800">
-                                    Transaksi Kredit
-                                </p>
-
-                                <p class="text-xs text-yellow-700 mt-1">
-                                    Barang akan langsung mengurangi stok dan pembayaran dapat dilakukan kemudian.
-                                </p>
-
-                            </div>
+                            <input
+                                type="text"
+                                name="customer_phone"
+                                x-model="customerPhone"
+                                :required="paymentMethod === 'credit'"
+                                placeholder="Masukkan nomor HP customer"
+                            >
 
                         </div>
 
 
-                        {{-- ================================================= --}}
-                        {{-- PAID --}}
-                        {{-- ================================================= --}}
+                        {{-- DUE DATE --}}
 
-                        <div
-                            class="space-y-2"
-                            x-show="paymentMethod !== 'credit'"
-                        >
+                        <div class="pos-input-group">
 
-                            <label class="text-sm font-medium text-gray-700">
+                            <label>
+                                Jatuh Tempo
+                            </label>
+
+                            <input
+                                type="date"
+                                name="due_date"
+                                x-model="dueDate"
+                                :required="paymentMethod === 'credit'"
+                                min="{{ date('Y-m-d') }}"
+                            >
+
+                        </div>
+
+                        <div class="pos-credit-notice">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="9"
+                                    stroke-width="1.7"
+                                />
+
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-width="1.7"
+                                    d="M12 10v6M12 7h.01"
+                                />
+                            </svg>
+
+                            <p>
+                                Barang langsung mengurangi stok dan pembayaran
+                                dapat dilakukan kemudian.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- PAID --}}
+
+                    <div
+                        x-show="paymentMethod !== 'credit'"
+                        class="pos-input-group pos-paid-group"
+                    >
+
+                        <div class="pos-paid-label-row">
+
+                            <label>
                                 Uang Dibayar
                             </label>
+
+                            <span
+                                x-show="paymentMethod === 'qris'"
+                                class="pos-paid-auto"
+                            >
+                                Otomatis sesuai total
+                            </span>
+
+                        </div>
+
+                        <div class="pos-money-input">
+
+                            <span>
+                                Rp
+                            </span>
 
                             <input
                                 type="number"
@@ -582,105 +947,117 @@
                                 min="0"
                                 :readonly="paymentMethod === 'qris'"
                                 :value="paymentMethod === 'qris' ? total : paid"
-                                class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                placeholder="Masukkan nominal"
+                                placeholder="0"
                             >
 
                         </div>
 
+                    </div>
 
-                        {{-- ================================================= --}}
-                        {{-- CHANGE --}}
-                        {{-- ================================================= --}}
 
-                        <div
-                            x-show="
-                                paymentMethod !== 'credit' &&
-                                paid >= total &&
-                                total > 0
-                            "
-                            class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-3"
-                        >
+                    {{-- CHANGE --}}
 
-                            <span class="text-sm text-green-700">
+                    <div
+                        x-show="
+                            paymentMethod !== 'credit' &&
+                            paid >= total &&
+                            total > 0
+                        "
+                        x-cloak
+                        class="pos-change-box"
+                    >
+
+                        <div class="pos-change-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            <span>
                                 Kembalian
                             </span>
 
-                            <span
-                                class="font-bold text-green-700"
+                            <strong
                                 x-text="formatRupiah(Math.max(0, paid - total))"
-                            ></span>
-
+                            ></strong>
                         </div>
 
+                    </div>
 
-                        {{-- ================================================= --}}
-                        {{-- CREDIT SUMMARY --}}
-                        {{-- ================================================= --}}
 
-                        <div
-                            x-show="
+                    {{-- CREDIT SUMMARY --}}
+
+                    <div
+                        x-show="
+                            paymentMethod === 'credit' &&
+                            total > 0
+                        "
+                        x-cloak
+                        class="pos-credit-summary"
+                    >
+
+                        <span>
+                            Sisa Tagihan
+                        </span>
+
+                        <strong
+                            x-text="formatRupiah(total)"
+                        ></strong>
+
+                    </div>
+
+
+                    {{-- SUBMIT --}}
+
+                    <button
+                        type="submit"
+                        :disabled="
+                            cart.length === 0 ||
+
+                            (
+                                paymentMethod !== 'credit' &&
+                                paid < total
+                            ) ||
+
+                            (
                                 paymentMethod === 'credit' &&
-                                total > 0
-                            "
-                            class="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-3"
-                        >
-
-                            <span class="text-sm text-yellow-700">
-                                Sisa Tagihan
-                            </span>
-
-                            <span
-                                class="font-bold text-yellow-700"
-                                x-text="formatRupiah(total)"
-                            ></span>
-
-                        </div>
-
-
-                        {{-- ================================================= --}}
-                        {{-- SUBMIT --}}
-                        {{-- ================================================= --}}
-
-                        <button
-                            type="submit"
-                            :disabled="
-                                cart.length === 0 ||
-
                                 (
-                                    paymentMethod !== 'credit' &&
-                                    paid < total
-                                ) ||
-
-                                (
-                                    paymentMethod === 'credit' &&
-                                    (
-                                        !customerName ||
-                                        !customerPhone ||
-                                        !dueDate
-                                    )
+                                    !customerName ||
+                                    !customerPhone ||
+                                    !dueDate
                                 )
-                            "
-                            class="w-full mt-3 bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                            )
+                        "
+                        class="pos-submit-button"
+                    >
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
                         >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="1.8"
+                                d="M5 12h14M13 6l6 6-6 6"
+                            />
+                        </svg>
 
-                            <span x-show="paymentMethod !== 'credit'">
-                                Bayar Sekarang
-                            </span>
+                        <span x-show="paymentMethod !== 'credit'">
+                            Bayar Sekarang
+                        </span>
 
-                            <span x-show="paymentMethod === 'credit'">
-                                Simpan Transaksi Kredit
-                            </span>
+                        <span x-show="paymentMethod === 'credit'">
+                            Simpan Transaksi Kredit
+                        </span>
 
-                        </button>
+                    </button>
 
-                    </form>
-
-                </div>
+                </form>
 
             </div>
 
-        </div>
+        </aside>
 
     </div>
 
@@ -692,100 +1069,88 @@
     <div
         x-show="variantModal"
         x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        class="pos-modal"
     >
 
-        {{-- OVERLAY --}}
-
         <div
-            class="absolute inset-0 bg-black/50"
+            class="pos-modal-overlay"
             @click="closeVariantModal()"
         ></div>
 
 
-        {{-- MODAL --}}
+        <div class="pos-modal-content">
 
-        <div
-            class="relative bg-white rounded-2xl w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
-        >
+            {{-- MODAL HEADER --}}
 
-            {{-- ================================================= --}}
-            {{-- HEADER --}}
-            {{-- ================================================= --}}
+            <div class="pos-modal-header">
 
-            <div class="p-5 border-b border-gray-200">
+                <div>
+                    <span class="pos-modal-label">
+                        Pilihan Produk
+                    </span>
 
-                <div class="flex items-center justify-between">
+                    <h3>
+                        Pilih Varian
+                    </h3>
 
-                    <div>
-
-                        <h3 class="font-bold text-lg">
-                            Pilih Varian
-                        </h3>
-
-                        <p
-                            class="text-sm text-gray-500 mt-1"
-                            x-text="selectedProduct ? selectedProduct.name : ''"
-                        ></p>
-
-                    </div>
-
-                    <button
-                        type="button"
-                        @click="closeVariantModal()"
-                        class="text-gray-400 hover:text-gray-700 text-2xl"
-                    >
-                        ×
-                    </button>
-
+                    <p
+                        x-text="selectedProduct ? selectedProduct.name : ''"
+                    ></p>
                 </div>
+
+                <button
+                    type="button"
+                    @click="closeVariantModal()"
+                    class="pos-modal-close"
+                >
+                    ×
+                </button>
 
             </div>
 
 
-            {{-- ================================================= --}}
-            {{-- IMAGE GALLERY --}}
-            {{-- ================================================= --}}
+            {{-- IMAGE --}}
 
-            <div class="px-5 pt-5">
+            <div class="pos-modal-gallery">
 
-                <div class="relative">
+                <div class="pos-main-image">
 
-                    <div class="aspect-square bg-gray-100 rounded-xl overflow-hidden">
+                    <template x-if="currentImages.length > 0">
 
-                        <template x-if="currentImages.length > 0">
+                        <img
+                            :src="currentImages[currentImageIndex]"
+                            alt=""
+                        >
 
-                            <img
-                                :src="currentImages[currentImageIndex]"
-                                class="w-full h-full object-cover"
-                                alt=""
+                    </template>
+
+                    <template x-if="currentImages.length === 0">
+
+                        <div class="pos-modal-no-image">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
                             >
+                                <rect
+                                    x="3"
+                                    y="4"
+                                    width="18"
+                                    height="16"
+                                    rx="2"
+                                    stroke-width="1.5"
+                                />
 
-                        </template>
+                                <path
+                                    stroke-width="1.5"
+                                    d="m4 17 5-5 3 3 2-2 6 6"
+                                />
+                            </svg>
 
-                        <template x-if="currentImages.length === 0">
+                        </div>
 
-                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-
-                                <svg
-                                    class="w-12 h-12"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="1.5"
-                                        d="M4 16l4-4a3 3 0 014 0l2 2 1-1a3 3 0 014 0l1 1M5 20h14a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z"
-                                    />
-                                </svg>
-
-                            </div>
-
-                        </template>
-
-                    </div>
+                    </template>
 
 
                     {{-- PREVIOUS --}}
@@ -794,7 +1159,7 @@
                         type="button"
                         x-show="currentImages.length > 1"
                         @click="previousImage()"
-                        class="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition"
+                        class="pos-gallery-arrow pos-gallery-prev"
                     >
                         ‹
                     </button>
@@ -806,7 +1171,7 @@
                         type="button"
                         x-show="currentImages.length > 1"
                         @click="nextImage()"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-white transition"
+                        class="pos-gallery-arrow pos-gallery-next"
                     >
                         ›
                     </button>
@@ -818,7 +1183,7 @@
 
                 <div
                     x-show="currentImages.length > 1"
-                    class="flex gap-2 mt-3 overflow-x-auto pb-1"
+                    class="pos-thumbnails"
                 >
 
                     <template
@@ -829,17 +1194,14 @@
                         <button
                             type="button"
                             @click="currentImageIndex = index"
-                            class="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition"
-                            :class="
-                                currentImageIndex === index
-                                    ? 'border-gray-900'
-                                    : 'border-gray-200'
-                            "
+                            :class="currentImageIndex === index
+                                ? 'pos-thumbnail-active'
+                                : ''"
+                            class="pos-thumbnail"
                         >
 
                             <img
                                 :src="image"
-                                class="w-full h-full object-cover"
                                 alt=""
                             >
 
@@ -852,35 +1214,29 @@
             </div>
 
 
-            {{-- ================================================= --}}
-            {{-- CONTENT --}}
-            {{-- ================================================= --}}
+            {{-- MODAL BODY --}}
 
-            <div class="p-5 space-y-5">
+            <div class="pos-modal-body">
 
 
-                {{-- ================================================= --}}
-                {{-- WARNA --}}
-                {{-- ================================================= --}}
+                {{-- COLOR --}}
 
-                <div>
+                <div class="pos-option-group">
 
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="pos-option-heading">
 
-                        <label class="text-sm font-semibold text-gray-900">
+                        <label>
                             Warna
                         </label>
 
                         <span
                             x-show="selectedColor"
-                            class="text-xs text-gray-500"
                             x-text="selectedColor"
                         ></span>
 
                     </div>
 
-
-                    <div class="flex flex-wrap gap-2">
+                    <div class="pos-color-options">
 
                         <template
                             x-for="color in availableColors"
@@ -890,53 +1246,46 @@
                             <button
                                 type="button"
                                 @click="selectColor(color)"
-                                class="px-4 py-2.5 rounded-lg border text-sm font-medium transition"
-                                :class="
-                                    selectedColor === color
-                                        ? 'bg-gray-900 text-white border-gray-900'
-                                        : 'bg-white text-gray-700 border-gray-200 hover:border-gray-900'
-                                "
+                                :class="selectedColor === color
+                                    ? 'pos-option-active'
+                                    : ''"
+                                class="pos-option-button"
                                 x-text="color"
                             ></button>
 
                         </template>
 
-
-                        <template x-if="availableColors.length === 0">
-
-                            <span class="text-sm text-gray-500">
-                                Tidak ada pilihan warna.
-                            </span>
-
-                        </template>
-
                     </div>
+
+                    <template x-if="availableColors.length === 0">
+
+                        <p class="pos-option-empty">
+                            Tidak ada pilihan warna.
+                        </p>
+
+                    </template>
 
                 </div>
 
 
-                {{-- ================================================= --}}
                 {{-- SIZE --}}
-                {{-- ================================================= --}}
 
-                <div>
+                <div class="pos-option-group">
 
-                    <div class="flex items-center justify-between mb-2">
+                    <div class="pos-option-heading">
 
-                        <label class="text-sm font-semibold text-gray-900">
+                        <label>
                             Ukuran
                         </label>
 
                         <span
                             x-show="selectedSize"
-                            class="text-xs text-gray-500"
                             x-text="selectedSize"
                         ></span>
 
                     </div>
 
-
-                    <div class="grid grid-cols-4 gap-2">
+                    <div class="pos-size-options">
 
                         <template
                             x-for="size in availableSizes"
@@ -947,82 +1296,71 @@
                                 type="button"
                                 @click="selectSize(size)"
                                 :disabled="sizeStock(size) <= 0"
-                                class="py-2.5 rounded-lg border text-sm font-medium transition"
                                 :class="
                                     selectedSize === size
-                                        ? 'bg-gray-900 text-white border-gray-900'
+                                        ? 'pos-option-active'
                                         : sizeStock(size) > 0
-                                            ? 'bg-white text-gray-700 border-gray-200 hover:border-gray-900'
-                                            : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                            ? ''
+                                            : 'pos-option-disabled'
                                 "
+                                class="pos-size-button"
                                 x-text="size"
                             ></button>
 
                         </template>
 
-
-                        <template x-if="availableSizes.length === 0">
-
-                            <div class="col-span-4 py-3 text-center text-sm text-gray-500">
-                                Pilih warna terlebih dahulu.
-                            </div>
-
-                        </template>
-
                     </div>
+
+                    <template x-if="availableSizes.length === 0">
+
+                        <p class="pos-option-empty">
+                            Pilih warna terlebih dahulu.
+                        </p>
+
+                    </template>
 
                 </div>
 
 
-                {{-- ================================================= --}}
-                {{-- DETAIL VARIANT --}}
-                {{-- ================================================= --}}
+                {{-- SELECTED VARIANT --}}
 
                 <template x-if="selectedVariant">
 
-                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <div class="pos-selected-variant">
 
-                        <div class="flex items-center justify-between">
+                        <div class="pos-variant-info">
 
-                            <div>
+                            <span>
+                                Varian dipilih
+                            </span>
 
-                                <p class="text-xs text-gray-500">
-                                    Varian dipilih
-                                </p>
-
-                                <p
-                                    class="font-semibold text-gray-900 mt-1"
-                                    x-text="selectedVariant.label"
-                                ></p>
-
-                            </div>
-
-                            <div class="text-right">
-
-                                <p class="text-xs text-gray-500">
-                                    Stok
-                                </p>
-
-                                <p
-                                    class="font-bold text-green-600 mt-1"
-                                    x-text="selectedVariant.stock"
-                                ></p>
-
-                            </div>
+                            <strong
+                                x-text="selectedVariant.label"
+                            ></strong>
 
                         </div>
 
+                        <div class="pos-variant-stock">
 
-                        <div class="mt-3 pt-3 border-t border-gray-200">
+                            <span>
+                                Stok
+                            </span>
 
-                            <p class="text-xs text-gray-500">
+                            <strong
+                                x-text="selectedVariant.stock"
+                            ></strong>
+
+                        </div>
+
+                        <div class="pos-variant-sku">
+
+                            <span>
                                 SKU Variant
-                            </p>
+                            </span>
 
-                            <p
-                                class="text-sm font-medium text-gray-800 mt-1"
+                            <strong
                                 x-text="selectedVariant.sku_variant || '-'"
-                            ></p>
+                            ></strong>
 
                         </div>
 
@@ -1031,9 +1369,7 @@
                 </template>
 
 
-                {{-- ================================================= --}}
-                {{-- ADD TO CART --}}
-                {{-- ================================================= --}}
+                {{-- ADD CART --}}
 
                 <button
                     type="button"
@@ -1042,8 +1378,21 @@
                         !selectedVariant ||
                         Number(selectedVariant.stock) <= 0
                     "
-                    class="w-full bg-gray-900 text-white py-3 rounded-lg font-semibold hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                    class="pos-add-cart-button"
                 >
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="1.8"
+                            d="M12 5v14M5 12h14"
+                        />
+                    </svg>
 
                     <span x-show="!selectedVariant">
                         Pilih Warna & Ukuran
@@ -1073,36 +1422,15 @@
     defer
 ></script>
 
-
 <script>
 
 function posApp() {
 
     return {
 
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH
-        |--------------------------------------------------------------------------
-        */
-
         search: '',
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CART
-        |--------------------------------------------------------------------------
-        */
-
         cart: [],
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | VARIANT MODAL
-        |--------------------------------------------------------------------------
-        */
 
         variantModal: false,
 
@@ -1114,23 +1442,9 @@ function posApp() {
 
         selectedVariant: null,
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | IMAGE GALLERY
-        |--------------------------------------------------------------------------
-        */
-
         currentImages: [],
 
         currentImageIndex: 0,
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | PAYMENT
-        |--------------------------------------------------------------------------
-        */
 
         paymentMethod: 'cash',
 
@@ -1142,21 +1456,8 @@ function posApp() {
 
         dueDate: '',
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | PRODUCT DATA
-        |--------------------------------------------------------------------------
-        */
-
         products: @js($productsJson),
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | TOTAL
-        |--------------------------------------------------------------------------
-        */
 
         get total() {
 
@@ -1175,12 +1476,6 @@ function posApp() {
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | AVAILABLE COLORS
-        |--------------------------------------------------------------------------
-        */
 
         get availableColors() {
 
@@ -1208,12 +1503,6 @@ function posApp() {
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | AVAILABLE SIZES
-        |--------------------------------------------------------------------------
-        */
 
         get availableSizes() {
 
@@ -1256,12 +1545,6 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | SEARCH MATCH
-        |--------------------------------------------------------------------------
-        */
-
         matches(name, sku) {
 
             const keyword =
@@ -1281,11 +1564,36 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | OPEN VARIANT
-        |--------------------------------------------------------------------------
-        */
+        hasVisibleProducts() {
+
+            const keyword =
+                this.search
+                    .toLowerCase()
+                    .trim();
+
+            if (!keyword) {
+                return true;
+            }
+
+            return this.products.some(product => {
+
+                const name =
+                    String(product.name)
+                        .toLowerCase();
+
+                const sku =
+                    String(product.sku)
+                        .toLowerCase();
+
+                return (
+                    name.includes(keyword) ||
+                    sku.includes(keyword)
+                );
+
+            });
+
+        },
+
 
         openVariant(productId) {
 
@@ -1296,72 +1604,34 @@ function posApp() {
                         Number(productId)
                 );
 
-
             if (!this.selectedProduct) {
-
-                console.error(
-                    'Produk tidak ditemukan:',
-                    productId
-                );
-
                 return;
             }
-
 
             if (
                 !Array.isArray(
                     this.selectedProduct.variants
                 )
             ) {
-
                 this.selectedProduct.variants = [];
-
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | RESET
-            |--------------------------------------------------------------------------
-            */
-
             this.selectedColor = null;
-
             this.selectedSize = null;
-
             this.selectedVariant = null;
-
             this.currentImageIndex = 0;
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | DEFAULT IMAGE
-            |--------------------------------------------------------------------------
-            */
 
             this.currentImages =
                 this.selectedProduct.image
                     ? [this.selectedProduct.image]
                     : [];
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | OPEN MODAL
-            |--------------------------------------------------------------------------
-            */
-
             this.variantModal = true;
+
+            document.body.classList.add('pos-modal-open');
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SELECT COLOR
-        |--------------------------------------------------------------------------
-        */
 
         selectColor(color) {
 
@@ -1373,28 +1643,12 @@ function posApp() {
 
             this.currentImageIndex = 0;
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | COLOR KEY
-            |--------------------------------------------------------------------------
-            */
-
             const colorKey =
                 String(color)
                     .toLowerCase()
                     .trim();
 
-
             let images = [];
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRIORITAS 1
-            | color_images dari controller
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 this.selectedProduct.color_images &&
@@ -1407,15 +1661,6 @@ function posApp() {
                     this.selectedProduct.color_images[colorKey];
 
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PRIORITAS 2
-            | Gabungkan gambar semua variant
-            | dengan warna yang sama
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 !Array.isArray(images) ||
@@ -1446,13 +1691,6 @@ function posApp() {
 
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | HILANGKAN DUPLIKAT
-            |--------------------------------------------------------------------------
-            */
-
             this.currentImages = [
                 ...new Set(
                     Array.isArray(images)
@@ -1460,13 +1698,6 @@ function posApp() {
                         : []
                 )
             ];
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FALLBACK
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 this.currentImages.length === 0 &&
@@ -1479,30 +1710,16 @@ function posApp() {
 
             }
 
-
             this.currentImageIndex = 0;
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | SELECT SIZE
-        |--------------------------------------------------------------------------
-        |
-        | PENTING:
-        | Jangan mengubah currentImages di sini.
-        |
-        | Gallery tetap berdasarkan warna.
-        |
-        */
 
         selectSize(size) {
 
             if (!this.selectedColor) {
                 return;
             }
-
 
             const colorKey =
                 String(this.selectedColor)
@@ -1513,13 +1730,6 @@ function posApp() {
                 String(size)
                     .toLowerCase()
                     .trim();
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CARI EXACT VARIANT
-            |--------------------------------------------------------------------------
-            */
 
             const variant =
                 this.selectedProduct.variants.find(
@@ -1547,26 +1757,13 @@ function posApp() {
                     }
                 );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | VARIANT TIDAK DITEMUKAN
-            |--------------------------------------------------------------------------
-            */
-
             if (!variant) {
 
                 this.selectedVariant = null;
 
                 return;
+
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | STOK HABIS
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 Number(variant.stock) <= 0
@@ -1575,38 +1772,15 @@ function posApp() {
                 this.selectedVariant = null;
 
                 return;
+
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SET VARIANT
-            |--------------------------------------------------------------------------
-            */
 
             this.selectedSize = size;
 
             this.selectedVariant = variant;
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | JANGAN UBAH GALLERY
-            |--------------------------------------------------------------------------
-            |
-            | Gallery tetap menggunakan gambar berdasarkan
-            | warna yang dipilih.
-            |
-            */
-
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CEK STOK SIZE
-        |--------------------------------------------------------------------------
-        */
 
         sizeStock(size) {
 
@@ -1616,8 +1790,8 @@ function posApp() {
             ) {
 
                 return 0;
-            }
 
+            }
 
             const colorKey =
                 String(this.selectedColor)
@@ -1629,7 +1803,6 @@ function posApp() {
                     .toLowerCase()
                     .trim();
 
-
             const variant =
                 this.selectedProduct.variants.find(
                     variant => {
@@ -1639,20 +1812,17 @@ function posApp() {
                                 variant.color
                             )
                                 .toLowerCase()
-                                .trim() ===
-                            colorKey &&
+                                .trim() === colorKey &&
 
                             String(
                                 variant.size
                             )
                                 .toLowerCase()
-                                .trim() ===
-                            sizeKey
+                                .trim() === sizeKey
                         );
 
                     }
                 );
-
 
             return variant
                 ? Number(variant.stock)
@@ -1661,18 +1831,11 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | ADD SELECTED VARIANT
-        |--------------------------------------------------------------------------
-        */
-
         addSelectedVariant() {
 
             if (!this.selectedProduct) {
                 return;
             }
-
 
             if (!this.selectedVariant) {
 
@@ -1681,8 +1844,8 @@ function posApp() {
                 );
 
                 return;
-            }
 
+            }
 
             this.addToCart(
                 this.selectedVariant
@@ -1691,28 +1854,14 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | ADD TO CART
-        |--------------------------------------------------------------------------
-        */
-
         addToCart(variant) {
 
             if (
                 !this.selectedProduct ||
                 !variant
             ) {
-
                 return;
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CEK STOK
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 Number(variant.stock) <= 0
@@ -1723,36 +1872,19 @@ function posApp() {
                 );
 
                 return;
+
             }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | CART KEY
-            |--------------------------------------------------------------------------
-            |
-            | Product + Variant.
-            |
-            */
 
             const key =
                 this.selectedProduct.id +
                 '-' +
                 variant.id;
 
-
             const existing =
                 this.cart.find(
                     item =>
                         item.key === key
                 );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ITEM SUDAH ADA
-            |--------------------------------------------------------------------------
-            */
 
             if (existing) {
 
@@ -1773,20 +1905,8 @@ function posApp() {
 
             } else {
 
-                /*
-                |--------------------------------------------------------------------------
-                | GAMBAR CART
-                |--------------------------------------------------------------------------
-                */
-
                 let image =
                     this.selectedProduct.image;
-
-
-                /*
-                | Ambil gambar pertama dari warna
-                | agar konsisten dengan gallery.
-                */
 
                 const colorKey =
                     String(
@@ -1794,7 +1914,6 @@ function posApp() {
                     )
                         .toLowerCase()
                         .trim();
-
 
                 if (
                     this.selectedProduct.color_images &&
@@ -1819,13 +1938,6 @@ function posApp() {
                         variant.images[0];
 
                 }
-
-
-                /*
-                |--------------------------------------------------------------------------
-                | PUSH CART
-                |--------------------------------------------------------------------------
-                */
 
                 this.cart.push({
 
@@ -1868,23 +1980,10 @@ function posApp() {
 
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLOSE MODAL
-            |--------------------------------------------------------------------------
-            */
-
             this.closeVariantModal();
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CLOSE MODAL
-        |--------------------------------------------------------------------------
-        */
 
         closeVariantModal() {
 
@@ -1902,24 +2001,18 @@ function posApp() {
 
             this.currentImageIndex = 0;
 
+            document.body.classList.remove('pos-modal-open');
+
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | NEXT IMAGE
-        |--------------------------------------------------------------------------
-        */
 
         nextImage() {
 
             if (
                 this.currentImages.length <= 1
             ) {
-
                 return;
             }
-
 
             this.currentImageIndex =
                 (
@@ -1930,21 +2023,13 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | PREVIOUS IMAGE
-        |--------------------------------------------------------------------------
-        */
-
         previousImage() {
 
             if (
                 this.currentImages.length <= 1
             ) {
-
                 return;
             }
-
 
             this.currentImageIndex =
                 (
@@ -1957,17 +2042,10 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | INCREASE
-        |--------------------------------------------------------------------------
-        */
-
         increase(index) {
 
             const item =
                 this.cart[index];
-
 
             if (
                 item.quantity <
@@ -1987,17 +2065,10 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | DECREASE
-        |--------------------------------------------------------------------------
-        */
-
         decrease(index) {
 
             const item =
                 this.cart[index];
-
 
             if (
                 item.quantity > 1
@@ -2014,12 +2085,6 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | REMOVE
-        |--------------------------------------------------------------------------
-        */
-
         removeItem(index) {
 
             this.cart.splice(
@@ -2029,12 +2094,6 @@ function posApp() {
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | CLEAR CART
-        |--------------------------------------------------------------------------
-        */
 
         clearCart() {
 
@@ -2050,12 +2109,6 @@ function posApp() {
 
         },
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | FORMAT RUPIAH
-        |--------------------------------------------------------------------------
-        */
 
         formatRupiah(value) {
 
@@ -2073,19 +2126,7 @@ function posApp() {
         },
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | PREPARE SUBMIT
-        |--------------------------------------------------------------------------
-        */
-
         prepareSubmit(event) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | CART KOSONG
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 this.cart.length === 0
@@ -2098,14 +2139,9 @@ function posApp() {
                 );
 
                 return;
+
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CASH / QRIS
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 this.paymentMethod !== 'credit' &&
@@ -2119,14 +2155,9 @@ function posApp() {
                 );
 
                 return;
+
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CREDIT
-            |--------------------------------------------------------------------------
-            */
 
             if (
                 this.paymentMethod === 'credit'
@@ -2143,8 +2174,8 @@ function posApp() {
                     );
 
                     return;
-                }
 
+                }
 
                 if (
                     !this.customerPhone.trim()
@@ -2157,8 +2188,8 @@ function posApp() {
                     );
 
                     return;
-                }
 
+                }
 
                 if (
                     !this.dueDate
@@ -2171,34 +2202,21 @@ function posApp() {
                     );
 
                     return;
-                }
 
+                }
 
                 this.paid = 0;
 
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CHECKOUT ITEMS
-            |--------------------------------------------------------------------------
-            */
-
             const container =
                 document.getElementById(
                     'checkout-items'
                 );
 
-
             container.innerHTML = '';
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | GENERATE INPUT
-            |--------------------------------------------------------------------------
-            */
 
             this.cart.forEach(
                 (item, index) => {
@@ -2235,14 +2253,5 @@ function posApp() {
 }
 
 </script>
-
-
-<style>
-
-[x-cloak] {
-    display: none !important;
-}
-
-</style>
 
 @endpush

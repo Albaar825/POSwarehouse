@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StockOpnameDetail extends Model
 {
@@ -16,18 +17,42 @@ class StockOpnameDetail extends Model
         'note',
     ];
 
-    public function stockOpname()
+    protected $casts = [
+        'system_stock' => 'integer',
+        'physical_stock' => 'integer',
+        'difference' => 'integer',
+    ];
+
+    /**
+     * Relasi ke Stock Opname
+     */
+    public function stockOpname(): BelongsTo
     {
-        return $this->belongsTo(StockOpname::class);
+        return $this->belongsTo(
+            StockOpname::class,
+            'stock_opname_id'
+        );
     }
 
-    public function product()
+    /**
+     * Relasi ke Product
+     */
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(
+            Product::class,
+            'product_id'
+        );
     }
 
-    public function variant()
+    /**
+     * Relasi ke Product Variant
+     */
+    public function variant(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+        return $this->belongsTo(
+            ProductVariant::class,
+            'product_variant_id'
+        );
     }
 }

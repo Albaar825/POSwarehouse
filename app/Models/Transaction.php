@@ -8,6 +8,7 @@ class Transaction extends Model
 {
     protected $fillable = [
         'invoice_number',
+        'type',
         'user_id',
         'customer_id',
         'total',
@@ -20,7 +21,16 @@ class Transaction extends Model
 
     protected $casts = [
         'due_date' => 'date',
+        'total' => 'integer',
+        'paid' => 'integer',
+        'change' => 'integer',
     ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONSHIPS
+    |--------------------------------------------------------------------------
+    */
 
     public function user()
     {
@@ -47,9 +57,18 @@ class Transaction extends Model
         return $this->hasMany(TransactionPayment::class);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | HELPERS
+    |--------------------------------------------------------------------------
+    */
+
     public function getRemainingAttribute()
     {
-        return max(0, $this->total - $this->paid);
+        return max(
+            0,
+            $this->total - $this->paid
+        );
     }
 
     public function isPaid(): bool
@@ -65,5 +84,11 @@ class Transaction extends Model
     public function isPartial(): bool
     {
         return $this->status === 'partial';
+    }
+
+    public function isOpenInvoice(): bool
+    {
+        return $this->type === 'open_invoice'
+            && $this->status === 'on_hold';
     }
 }

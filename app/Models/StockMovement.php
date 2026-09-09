@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Product;
+use App\Models\ProductVariant;
+use App\Models\User;
+use App\Models\Transaction;
 
 class StockMovement extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'product_id',
         'product_variant_id',
@@ -25,12 +25,21 @@ class StockMovement extends Model
         'quantity' => 'integer',
     ];
 
-    public function product(): BelongsTo
+    /**
+     * Produk utama
+     */
+    public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(
+            Product::class,
+            'product_id'
+        );
     }
 
-    public function productVariant(): BelongsTo
+    /**
+     * Variant produk
+     */
+    public function productVariant()
     {
         return $this->belongsTo(
             ProductVariant::class,
@@ -38,12 +47,21 @@ class StockMovement extends Model
         );
     }
 
-    public function user(): BelongsTo
+    /**
+     * User yang melakukan perubahan stock
+     */
+    public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(
+            User::class,
+            'user_id'
+        );
     }
 
-    public function transaction(): BelongsTo
+    /**
+     * Transaction terkait stock movement
+     */
+    public function transaction()
     {
         return $this->belongsTo(
             Transaction::class,

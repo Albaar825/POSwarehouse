@@ -5,45 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Kasir & Warehouse')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/pos.css', 'resources/js/app.js'])
     @stack('head')
+
+    {{-- Cegah flash: baca preferensi collapse sebelum body dirender --}}
+    <script>
+        (function () {
+            try {
+                if (window.innerWidth >= 640 && localStorage.getItem('hw-sidebar-collapsed') === '1') {
+                    document.documentElement.classList.add('hw-sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
     <div class="flex min-h-screen">
 
-        {{-- ===== SIDEBAR (desktop: fixed, mobile: slide-in drawer) ===== --}}
+        {{-- ===== SIDEBAR (desktop: collapsible, mobile: slide-in drawer) ===== --}}
         <aside id="sidebar"
-            class="hw-sidebar fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transition-transform duration-200 ease-in-out overflow-y-auto sm:translate-x-0">
+            class="hw-sidebar fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transition-transform duration-200 ease-in-out overflow-y-auto overflow-x-hidden sm:translate-x-0">
 
-            <div class="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-                <div class="hw-logo-badge w-10 h-10 rounded-full flex items-center justify-center text-sm">HW</div>
-                <div>
-                    <p class="text-white font-semibold text-sm leading-tight">Kasir & Warehouse</p>
-                    <p class="text-gray-400 text-xs">{{ auth()->user()->role === 'admin' ? 'Admin Panel' : 'Kasir Panel' }}</p>
+            <div class="hw-sidebar-header flex items-center gap-3 px-5 py-5 border-b border-white/10">
+                <div class="hw-logo-badge w-10 h-10 rounded-full flex items-center justify-center text-sm shrink-0">HW</div>
+                <div class="hw-logo-text min-w-0">
+                    <p class="text-white font-semibold text-sm leading-tight truncate">Kasir & Warehouse</p>
+                    <p class="text-gray-400 text-xs truncate">{{ auth()->user()->role === 'admin' ? 'Admin Panel' : 'Kasir Panel' }}</p>
                 </div>
+
+                {{-- Toggle collapse (desktop only) --}}
+                <button
+                    id="sidebarCollapseToggle"
+                    type="button"
+                    class="hw-collapse-toggle hidden sm:flex ml-auto"
+                    aria-label="Ciutkan sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
             </div>
 
             <nav class="px-3 py-4 space-y-1">
-                <a href="{{ route('dashboard') }}" class="hw-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}" class="hw-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-tooltip="Dashboard">
                     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                    Dashboard
+                    <span class="hw-nav-text">Dashboard</span>
                 </a>
 
                 @if (auth()->user()->isAdmin())
-                    <p class="px-3 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Warehouse</p>
+                    <p class="hw-nav-section px-3 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">Warehouse</p>
 
-                    <a href="{{ route('products.index') }}" class="hw-nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}">
+                    <a href="{{ route('products.index') }}" class="hw-nav-link {{ request()->routeIs('products.*') ? 'active' : '' }}" data-tooltip="Kelola Produk">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                        Kelola Produk
+                        <span class="hw-nav-text">Kelola Produk</span>
                     </a>
 
-                    <a href="{{ route('stock.index') }}" class="hw-nav-link {{ request()->routeIs('stock.*') ? 'active' : '' }}">
+                    <a href="{{ route('stock.index') }}" class="hw-nav-link {{ request()->routeIs('stock.*') ? 'active' : '' }}" data-tooltip="Stok Masuk/Keluar">
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
-                        Stok Masuk/Keluar
+                        <span class="hw-nav-text">Stok Masuk/Keluar</span>
                     </a>
 
                      <a href="{{ route('admin.stock-opname.index') }}"
-                        class="hw-nav-link {{ request()->routeIs('admin.stock-opname.*') ? 'active' : '' }}">
+                        class="hw-nav-link {{ request()->routeIs('admin.stock-opname.*') ? 'active' : '' }}" data-tooltip="Stock Opname">
 
                         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round"
@@ -52,94 +75,144 @@
                                 d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5h6M9 12h6m-6 4h4" />
                         </svg>
 
-                        Stock Opname
+                        <span class="hw-nav-text">Stock Opname</span>
                     </a>
                 @endif
 
-                @if (auth()->user()->isKasir())
+               @if (auth()->user()->isKasir())
 
-                        <p class="px-3 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <p class="hw-nav-section px-3 pt-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        Kasir
+                    </p>
+
+                    {{-- POINT OF SALE --}}
+                    <a href="{{ route('pos.index') }}"
+                        class="hw-nav-link {{ request()->routeIs('pos.index') ? 'active' : '' }}"
+                        data-tooltip="Point of Sale">
+
+                        <svg fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M3 3h18v4H3V3Zm2 4v14h14V7M8 11h8M8 15h5" />
+
+                        </svg>
+
+                        <span class="hw-nav-text">
                             Kasir
-                        </p>
+                        </span>
 
-                        {{-- POINT OF SALE --}}
-                        <a
-                            href="{{ route('pos.index') }}"
-                            class="hw-nav-link {{ request()->routeIs('pos.index') ? 'active' : '' }}"
-                        >
+                    </a>
 
-                            <svg
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M3 3h18v4H3V3Zm2 4v14h14V7M8 11h8M8 15h5"
-                                />
-                            </svg>
 
-                            Point of Sale
+                    {{-- INVOICE KREDIT --}}
+                    <a href="{{ route('pos.credit.index') }}"
+                        class="hw-nav-link {{ request()->routeIs('pos.credit.*') ? 'active' : '' }}"
+                        data-tooltip="Invoice Kredit">
 
-                        </a>
+                        <svg fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
 
-                        {{-- INVOICE KREDIT --}}
-                        <a
-                            href="{{ route('pos.credit.index') }}"
-                            class="hw-nav-link {{ request()->routeIs('pos.credit.*') ? 'active' : '' }}"
-                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 14h6m-6-4h6m2 11H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2ZM9 3v2h6V3" />
 
-                            <svg
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 14h6m-6-4h6m2 11H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2ZM9 3v2h6V3"
-                                />
-                            </svg>
+                        </svg>
 
+                        <span class="hw-nav-text">
                             Invoice Kredit
+                        </span>
 
-                        </a>
+                    </a>
 
-                        {{-- RIWAYAT TRANSAKSI --}}
-                        <a
-                            href="{{ route('transactions.index') }}"
-                            class="hw-nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}"
-                        >
+                    {{-- OPEN INVOICE --}}
+                    <a href="{{ route('pos.open-invoice.index') }}"
+                        class="hw-nav-link {{ request()->routeIs('pos.open-invoice.*') ? 'active' : '' }}"
+                        data-tooltip="Open Invoice">
 
-                            <svg
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M9 5h6m-8 4h10M7 13h10M7 17h6m5 4H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2Z"
-                                />
-                            </svg>
+                        <svg fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
 
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 14.25l6-6m-5.25-3h6.5A2.75 2.75 0 0119 8v8a2.75 2.75 0 01-2.75 2.75h-8.5A2.75 2.75 0 015 16V8a2.75 2.75 0 012.75-2.75h1.5"
+                            />
+
+                        </svg>
+
+                        <span class="hw-nav-text">
+                            Open Invoice
+                        </span>
+
+                    </a>
+                    {{-- RIWAYAT TRANSAKSI --}}
+                    <a href="{{ route('transactions.index') }}"
+                        class="hw-nav-link {{ request()->routeIs('transactions.*') ? 'active' : '' }}"
+                        data-tooltip="Riwayat Transaksi">
+
+                        <svg fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5h6m-8 4h10M7 13h10M7 17h6m5 4H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2Z" />
+
+                        </svg>
+
+                        <span class="hw-nav-text">
                             Riwayat Transaksi
+                        </span>
 
-                        </a>
+                    </a>
 
-                    @endif
+                @endif
             </nav>
+
+                    </nav>
+
+        {{-- ===== SIDEBAR FOOTER ===== --}}
+        <div class="hw-sidebar-footer">
+
+            <div class="hw-footer-line"></div>
+
+            <div class="hw-footer-brand">
+                <span>HOODIE</span>
+                <span>WAREHOUSE</span>
+            </div>
+
+            <p class="hw-footer-address">
+                Jl. [Alamat Store] • Jakarta
+            </p>
+
+            <p class="hw-footer-copy">
+                © 2026 Hoodie Warehouse
+            </p>
+
+            <p class="hw-footer-developer">
+                Developed by <strong>ALME TEAM</strong>
+            </p>
+
+         </div>
         </aside>
 
         {{-- Backdrop buat mobile, klik luar sidebar buat nutup --}}
         <div id="backdrop" class="hw-backdrop fixed inset-0 z-30 hidden sm:hidden"></div>
 
        {{-- ===== MAIN CONTENT ===== --}}
-<div class="flex-1 sm:ml-64 min-w-0">
+<div class="hw-main-content flex-1 min-w-0">
 
     {{-- ===== NAVBAR ===== --}}
     <header class="sticky top-0 z-20 bg-white border-b border-gray-200">
@@ -171,6 +244,18 @@
 
                 </button>
 
+                {{-- Toggle desktop (muncul saat sidebar collapsed, biar gampang expand lagi) --}}
+                <button
+                    id="sidebarExpandToggle"
+                    type="button"
+                    class="hw-expand-toggle hidden items-center justify-center w-9 h-9 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+                    aria-label="Buka sidebar">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+
+                </button>
 
                 {{-- Judul Halaman --}}
                 <div>
@@ -264,6 +349,36 @@
                     </div>
 
 
+                    {{-- Menu Akun --}}
+                    <div class="p-2 border-b border-gray-100">
+
+                        {{-- Ganti Password --}}
+
+                           <a href="{{ route('profile.password') }}"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-5 h-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor">
+
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+
+                            </svg>
+
+                            <span>
+                                Ganti Password
+                            </span>
+
+                        </a>
+
+                    </div>
+
+
                     {{-- Logout --}}
                     <div class="p-2">
 
@@ -337,7 +452,7 @@
    <script>
 
     // ==============================
-    // SIDEBAR MOBILE
+    // SIDEBAR MOBILE (drawer)
     // ==============================
 
     const sidebar = document.getElementById('sidebar');
@@ -345,24 +460,41 @@
     const menuToggle = document.getElementById('menuToggle');
 
     function openSidebar() {
-
         sidebar?.classList.remove('-translate-x-full');
-
         backdrop?.classList.remove('hidden');
-
     }
 
     function closeSidebar() {
-
         sidebar?.classList.add('-translate-x-full');
-
         backdrop?.classList.add('hidden');
-
     }
 
     menuToggle?.addEventListener('click', openSidebar);
-
     backdrop?.addEventListener('click', closeSidebar);
+
+
+    // ==============================
+    // SIDEBAR DESKTOP (collapse/expand)
+    // ==============================
+
+    const collapseToggle = document.getElementById('sidebarCollapseToggle');
+    const expandToggle = document.getElementById('sidebarExpandToggle');
+    const htmlEl = document.documentElement;
+
+    // Tombol expand aslinya punya class Tailwind "hidden" di HTML sebagai
+    // fallback no-JS. Begitu JS jalan, kita lepas supaya CSS
+    // (html.hw-sidebar-collapsed .hw-expand-toggle) yang menentukan tampil/tidak.
+    expandToggle?.classList.remove('hidden');
+
+    function setSidebarCollapsed(collapsed) {
+        htmlEl.classList.toggle('hw-sidebar-collapsed', collapsed);
+        try {
+            localStorage.setItem('hw-sidebar-collapsed', collapsed ? '1' : '0');
+        } catch (e) {}
+    }
+
+    collapseToggle?.addEventListener('click', () => setSidebarCollapsed(true));
+    expandToggle?.addEventListener('click', () => setSidebarCollapsed(false));
 
 
     // ==============================
@@ -373,27 +505,18 @@
     const profileDropdown = document.getElementById('profileDropdown');
 
     profileToggle?.addEventListener('click', function (event) {
-
         event.stopPropagation();
-
         profileDropdown?.classList.toggle('hidden');
-
     });
 
-
-    // Tutup dropdown ketika klik di luar
     document.addEventListener('click', function (event) {
-
         if (
             profileDropdown &&
             !profileDropdown.contains(event.target) &&
             !profileToggle.contains(event.target)
         ) {
-
             profileDropdown.classList.add('hidden');
-
         }
-
     });
 
 </script>

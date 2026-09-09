@@ -4,1250 +4,604 @@
 
 @section('content')
 
-    {{-- HEADER --}}
-    <div class="mb-6">
-        <div class="flex items-center gap-2 mb-2">
+<div
+    x-data="productCreateForm()"
+    class="space-y-6"
+>
 
-            <a href="{{ route('products.index') }}"
-                class="text-gray-500 hover:text-gray-800 transition">
-
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    class="w-5 h-5">
-
-                    <path stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M15.75 19.5 8.25 12l7.5-7.5" />
-
-                </svg>
-
-            </a>
-
-            <h1 class="text-lg font-semibold text-gray-800">
-                Tambah Produk
-            </h1>
-
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Tambah Produk</h1>
+            <p class="text-sm text-gray-500 mt-1">Tambahkan produk beserta variant dan stoknya.</p>
         </div>
 
-        <p class="text-sm text-gray-500">
-            Tambahkan produk baru beserta variant warna, size, stok, dan gambar.
-        </p>
+        <a href="{{ route('products.index') }}"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Kembali
+        </a>
     </div>
 
-
-    {{-- ERROR --}}
     @if ($errors->any())
-
-        <div class="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-
-            <p class="font-medium text-sm mb-2">
-                Terdapat kesalahan:
-            </p>
-
-            <ul class="list-disc list-inside text-sm space-y-1">
-
-                @foreach ($errors->all() as $error)
-
-                    <li>
-                        {{ $error }}
-                    </li>
-
-                @endforeach
-
-            </ul>
-
+        <div class="rounded-2xl border border-red-200 bg-red-50 p-4">
+            <div class="flex gap-3">
+                <div class="shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86l-8.82 15a2 2 0 001.71 2.14h17.64a2 2 0 001.71-2.14l-8.82-15a2 2 0 00-3.42 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-red-800">Ada data yang perlu diperbaiki</h3>
+                    <ul class="mt-2 space-y-1 text-sm text-red-700">
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
         </div>
-
     @endif
 
-
-    <form action="{{ route('products.store') }}"
-        method="POST"
-        enctype="multipart/form-data"
-        id="productForm">
-
+    <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" @submit="prepareSubmit()" class="space-y-6">
         @csrf
 
-
         {{-- INFORMASI PRODUK --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-5">
-
-            <div class="px-5 py-4 border-b border-gray-100">
-
-                <h2 class="font-semibold text-gray-800">
-                    Informasi Produk
-                </h2>
-
-                <p class="text-xs text-gray-500 mt-1">
-                    Informasi utama produk yang akan disimpan di warehouse.
-                </p>
-
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Informasi Produk</h2>
+                        <p class="text-sm text-gray-500">Informasi dasar produk.</p>
+                    </div>
+                </div>
             </div>
 
+            <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            <div class="p-5">
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Produk <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="Contoh: Hoodie Premium"
+                        class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
+                    @error('name') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Kategori <span class="text-red-500">*</span></label>
+                    <select name="category_id" required class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
+                        <option value="">Pilih Kategori</option>
+                        @foreach ($categories as $category)
+                            <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('category_id') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">SKU Produk</label>
+                    <input type="text" name="sku" x-model="baseSku" value="{{ old('sku') }}" placeholder="Contoh: HD-PREM-001"
+                        class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
+                    @error('sku') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
-                    {{-- NAMA --}}
-                    <div>
-
-                        <label for="name"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Nama Produk
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <input type="text"
-                            name="name"
-                            id="name"
-                            value="{{ old('name') }}"
-                            placeholder="Contoh: Kaos Oversize Premium"
-                            required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Beli <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rp</span>
+                        <input type="number" name="purchase_price" value="{{ old('purchase_price', 0) }}" min="0" required
+                            class="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
                     </div>
+                    @error('purchase_price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
-
-                    {{-- SKU --}}
-                    <div>
-
-                        <label for="sku"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            SKU Produk
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <input type="text"
-                            name="sku"
-                            id="sku"
-                            value="{{ old('sku') }}"
-                            placeholder="Contoh: KOS-001"
-                            required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                        <p class="text-xs text-gray-400 mt-1">
-                            SKU utama produk. SKU variant akan dibuat otomatis.
-                        </p>
-
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Harga Jual (default) <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-gray-500">Rp</span>
+                        <input type="number" name="price" x-model.number="basePrice" value="{{ old('price', 0) }}" min="0" required
+                            class="w-full rounded-xl border border-gray-300 pl-12 pr-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
                     </div>
+                    <p class="mt-1.5 text-xs text-gray-500">Dipakai sebagai default harga tiap kombinasi variant (bisa diubah per baris di bawah).</p>
+                    @error('price') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Minimum Stok <span class="text-red-500">*</span></label>
+                    <input type="number" name="min_stock" value="{{ old('min_stock', 0) }}" min="0" required
+                        class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
+                    <p class="mt-1.5 text-xs text-gray-500">Digunakan sebagai batas peringatan stok menipis.</p>
+                    @error('min_stock') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
+                </div>
 
-                    {{-- CATEGORY --}}
-                    <div>
-
-                        <label for="category_id"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Kategori
-
-                        </label>
-
-                        <select name="category_id"
-                            id="category_id"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                            <option value="">
-                                -- Pilih Kategori --
-                            </option>
-
-                            @foreach ($categories as $category)
-
-                                <option value="{{ $category->id }}"
-                                    {{ old('category_id') == $category->id ? 'selected' : '' }}>
-
-                                    {{ $category->name }}
-
-                                </option>
-
-                            @endforeach
-
-                        </select>
-
-                    </div>
-
-
-                    {{-- UNIT --}}
-                    <div>
-
-                        <label for="unit"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Satuan
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <select name="unit"
-                            id="unit"
-                            required
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                            <option value="pcs"
-                                {{ old('unit', 'pcs') === 'pcs' ? 'selected' : '' }}>
-                                pcs
-                            </option>
-
-                            <option value="unit"
-                                {{ old('unit') === 'unit' ? 'selected' : '' }}>
-                                unit
-                            </option>
-
-                            <option value="box"
-                                {{ old('unit') === 'box' ? 'selected' : '' }}>
-                                box
-                            </option>
-
-                            <option value="lusin"
-                                {{ old('unit') === 'lusin' ? 'selected' : '' }}>
-                                lusin
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    {{-- HARGA BELI --}}
-                    <div>
-
-                        <label for="purchase_price"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Harga Beli
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <div class="relative">
-
-                            <span
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                                Rp
-                            </span>
-
-                            <input type="number"
-                                name="purchase_price"
-                                id="purchase_price"
-                                value="{{ old('purchase_price', 0) }}"
-                                min="0"
-                                required
-                                class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
+                <div class="lg:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Gambar Produk</label>
+                    <div class="border-2 border-dashed border-gray-300 rounded-2xl p-6 hover:border-gray-500 transition">
+                        <div class="flex flex-col sm:flex-row items-center gap-5">
+                            <div class="w-28 h-28 rounded-2xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                                <template x-if="mainImagePreview">
+                                    <img :src="mainImagePreview" class="w-full h-full object-cover" alt="Preview">
+                                </template>
+                                <template x-if="!mainImagePreview">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 16.5V7a2 2 0 012-2h3l1.5-2h5L16 5h3a2 2 0 012 2v9.5a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                        <circle cx="12" cy="12" r="3" stroke-width="1.5" />
+                                    </svg>
+                                </template>
+                            </div>
+                            <div class="flex-1 w-full">
+                                <input type="file" name="image" accept="image/*" @change="previewMainImage($event)"
+                                    class="block w-full text-sm text-gray-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800">
+                                <p class="mt-2 text-xs text-gray-500">JPG, JPEG, PNG, WEBP. Gunakan gambar produk utama.</p>
+                            </div>
                         </div>
-
                     </div>
-
-
-                    {{-- HARGA JUAL --}}
-                    <div>
-
-                        <label for="price"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Harga Jual
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <div class="relative">
-
-                            <span
-                                class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
-                                Rp
-                            </span>
-
-                            <input type="number"
-                                name="price"
-                                id="price"
-                                value="{{ old('price', 0) }}"
-                                min="0"
-                                required
-                                class="w-full border border-gray-300 rounded-lg pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                        </div>
-
-                    </div>
-
-
-                    {{-- MIN STOCK --}}
-                    <div class="md:col-span-2">
-
-                        <label for="min_stock"
-                            class="block text-sm font-medium text-gray-700 mb-1">
-
-                            Minimum Stok Produk
-                            <span class="text-red-500">*</span>
-
-                        </label>
-
-                        <input type="number"
-                            name="min_stock"
-                            id="min_stock"
-                            value="{{ old('min_stock', 0) }}"
-                            min="0"
-                            required
-                            class="w-full md:w-1/2 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                        <p class="text-xs text-gray-400 mt-1">
-                            Berlaku untuk total stok seluruh variant produk.
-                        </p>
-
-                    </div>
-
+                    @error('image') <p class="mt-1 text-xs text-red-500">{{ $message }}</p> @enderror
                 </div>
 
             </div>
-
         </div>
 
-
-        {{-- VARIANTS --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-5">
-
-            <div class="px-5 py-4 border-b border-gray-100">
-
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-
-                    <div>
-
-                        <h2 class="font-semibold text-gray-800">
-                            Variant Produk
-                        </h2>
-
-                        <p class="text-xs text-gray-500 mt-1">
-                            Setiap variant dapat memiliki warna, size, stok, dan banyak gambar.
-                        </p>
-
+        {{-- VARIANT --}}
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-900">Variant Produk</h2>
+                            <p class="text-sm text-gray-500">Tambahkan warna, ukuran, atau variant lainnya.</p>
+                        </div>
                     </div>
 
-                    <button type="button"
-                        id="addVariant"
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
-
-                        + Tambah Variant
-
+                    <button type="button" @click="addVariantType()"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Tambah Variant
                     </button>
-
                 </div>
-
             </div>
 
+            <div class="p-6">
 
-            <div class="p-5">
+                <div x-show="variantTypes.length === 0" class="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                    <div class="w-12 h-12 mx-auto rounded-xl bg-white flex items-center justify-center mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v12m6-6H6" />
+                        </svg>
+                    </div>
+                    <h3 class="font-semibold text-gray-800">Belum ada variant</h3>
+                    <p class="text-sm text-gray-500 mt-1">Klik "Tambah Variant" untuk menambahkan variant produk.</p>
+                </div>
 
-                {{-- VARIANT CONTAINER --}}
-                <div id="variantsContainer"
-                    class="space-y-4">
+                <div class="space-y-5">
+                    <template x-for="(variant, index) in variantTypes" :key="variant.id">
+                        <div class="rounded-2xl border border-gray-200 overflow-hidden">
 
-                    @php
+                            <div class="px-5 py-4 bg-gray-50 border-b border-gray-200">
+                                <div class="flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-9 h-9 rounded-lg bg-gray-900 text-white flex items-center justify-center text-sm font-bold" x-text="index + 1"></div>
+                                        <div>
+                                            <h3 class="font-bold text-gray-900" x-text="'Variant ' + (index + 1)"></h3>
+                                            <p class="text-xs text-gray-500" x-show="index === 0">Variant utama, contoh: Warna</p>
+                                            <p class="text-xs text-gray-500" x-show="index > 0">Variant tambahan, contoh: Ukuran, Bahan, Model</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="removeVariantType(index)"
+                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-red-500 hover:bg-red-50 transition" title="Hapus variant">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-7 0h8" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
 
-                        $oldVariants = old('variants', [
-                            [
-                                'color' => '',
-                                'size' => '',
-                                'stock' => 0,
-                            ]
-                        ]);
-
-                    @endphp
-
-
-                    @foreach ($oldVariants as $index => $variant)
-
-                        <div class="variant-row border border-gray-200 rounded-xl p-4 md:p-5"
-                            data-index="{{ $index }}">
-
-                            {{-- VARIANT TOP --}}
-                            <div class="flex items-center justify-between mb-4">
+                            <div class="p-5 space-y-5">
 
                                 <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Variant <span class="text-red-500">*</span></label>
+                                    <input type="text" :name="'variant_groups[' + index + '][name]'" x-model="variant.name" @input="refreshCombinations()"
+                                        :placeholder="index === 0 ? 'Contoh: Warna' : 'Contoh: Ukuran'" required
+                                        class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
 
-                                    <h3 class="font-semibold text-gray-800">
-                                        Variant #{{ $index + 1 }}
-                                    </h3>
-
-                                    <p class="text-xs text-gray-400 mt-1">
-                                        Data warna, size, stok dan gambar variant.
-                                    </p>
-
+                                    {{-- WAJIB: field type ini yang divalidasi controller (parent/child) --}}
+                                    <input type="hidden" :name="'variant_groups[' + index + '][type]'" :value="index === 0 ? 'parent' : 'child'">
                                 </div>
 
+                                <div>
+                                    <div class="flex items-center justify-between gap-3 mb-3">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700">Nilai Variant</label>
+                                            <p class="text-xs text-gray-500 mt-1">Tambahkan nilai yang tersedia.</p>
+                                        </div>
+                                        <button type="button" @click="addVariantValue(index)"
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-xs font-semibold text-gray-700 hover:bg-gray-50 transition">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            Tambah Nilai
+                                        </button>
+                                    </div>
 
-                                <button type="button"
-                                    class="remove-variant inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm transition">
+                                    <div class="space-y-3">
+                                        <template x-for="(value, valueIndex) in variant.values" :key="value.id">
+                                            <div class="variant-value-row rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                                <div class="flex flex-col lg:flex-row gap-4">
 
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke-width="1.5"
-                                        stroke="currentColor"
-                                        class="w-4 h-4">
+                                                    <div class="flex-1">
+                                                        <label class="block text-xs font-semibold text-gray-600 mb-2">Nilai</label>
+                                                        <input type="text" :name="'variant_groups[' + index + '][values][' + valueIndex + '][name]'"
+                                                            x-model="value.name" @input="refreshCombinations()"
+                                                            :placeholder="index === 0 ? 'Contoh: Hitam' : 'Contoh: M'" required
+                                                            class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none transition">
+                                                    </div>
 
-                                        <path stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244-2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 1-7.5 0" />
+                                                    <div class="w-full lg:w-80" x-show="index === 0">
+                                                        <label class="block text-xs font-semibold text-gray-600 mb-2">Gambar</label>
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-16 h-16 rounded-xl bg-white border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                                                <template x-if="value.preview">
+                                                                    <img :src="value.preview" class="w-full h-full object-cover" alt="">
+                                                                </template>
+                                                                <template x-if="!value.preview">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4-4a3 3 0 014 0l4 4m-1-5h.01M5 20h14a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                                                                    </svg>
+                                                                </template>
+                                                            </div>
+                                                            <input type="file" accept="image/*"
+                                                                :name="'variant_groups[' + index + '][values][' + valueIndex + '][image]'"
+                                                                @change="previewVariantImage($event, index, valueIndex)"
+                                                                class="block w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800">
+                                                        </div>
+                                                        <p class="mt-1.5 text-[11px] text-gray-500">Gambar khusus untuk nilai ini (misal: foto warna Hitam). Otomatis tampil di POS saat kasir memilih warna ini.</p>
+                                                    </div>
 
-                                    </svg>
+                                                    <div class="flex items-end">
+                                                        <button type="button" @click="removeVariantValue(index, valueIndex)"
+                                                            class="w-full lg:w-10 h-10 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition flex items-center justify-center" title="Hapus nilai">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3m-7 0h8" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
 
-                                    Hapus
-
-                                </button>
-
-                            </div>
-
-
-                            {{-- COLOR / SIZE / STOCK --}}
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-
-                                {{-- COLOR --}}
-                                <div class="md:col-span-4">
-
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-
-                                        Warna
-                                        <span class="text-red-500">*</span>
-
-                                    </label>
-
-                                    <input type="text"
-                                        name="variants[{{ $index }}][color]"
-                                        value="{{ $variant['color'] ?? '' }}"
-                                        placeholder="Contoh: Hitam"
-                                        class="variant-color w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                                </div>
-
-
-                                {{-- SIZE --}}
-                                <div class="md:col-span-4">
-
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-
-                                        Size
-
-                                    </label>
-
-                                    <select name="variants[{{ $index }}][size]"
-                                        class="variant-size w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
-                                        <option value="">
-                                            -- Size --
-                                        </option>
-
-                                        @foreach (['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] as $size)
-
-                                            <option value="{{ $size }}"
-                                                {{ ($variant['size'] ?? '') === $size ? 'selected' : '' }}>
-
-                                                {{ $size }}
-
-                                            </option>
-
-                                        @endforeach
-
-                                    </select>
-
-                                </div>
-
-
-                                {{-- STOCK --}}
-                                <div class="md:col-span-4">
-
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">
-
-                                        Stok
-                                        <span class="text-red-500">*</span>
-
-                                    </label>
-
-                                    <input type="number"
-                                        name="variants[{{ $index }}][stock]"
-                                        value="{{ $variant['stock'] ?? 0 }}"
-                                        min="0"
-                                        required
-                                        class="variant-stock w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
                                 </div>
 
                             </div>
-
-
-                            {{-- IMAGE VARIANT --}}
-                            <div class="mt-5 pt-5 border-t border-gray-100">
-
-                                <div class="mb-3">
-
-                                    <label class="block text-sm font-medium text-gray-700">
-
-                                        Gambar Variant
-
-                                        <span class="text-gray-400 font-normal">
-                                            (opsional)
-                                        </span>
-
-                                    </label>
-
-                                    <p class="text-xs text-gray-400 mt-1">
-
-                                        Upload beberapa gambar untuk warna
-                                        <strong class="variant-color-label">
-                                            {{ $variant['color'] ?: 'variant ini' }}
-                                        </strong>.
-
-                                    </p>
-
-                                </div>
-
-
-                                <input type="file"
-                                    name="variants[{{ $index }}][images][]"
-                                    class="variant-images w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    accept="image/jpeg,image/png,image/jpg,image/webp"
-                                    multiple>
-
-
-                                <p class="text-xs text-gray-400 mt-1">
-
-                                    Bisa memilih banyak gambar sekaligus.
-                                    Format JPG, JPEG, PNG, WEBP.
-                                    Maksimal 2 MB per gambar.
-
-                                </p>
-
-
-                                {{-- IMAGE PREVIEW --}}
-                                <div class="image-preview-container mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                                </div>
-
-                            </div>
-
                         </div>
-
-                    @endforeach
-
+                    </template>
                 </div>
 
-
-                {{-- TOTAL STOCK --}}
-                <div class="mt-5 pt-4 border-t border-gray-100">
-
-                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-
-                        <div>
-
-                            <p class="text-sm font-medium text-gray-700">
-                                Total Stok Produk
-                            </p>
-
-                            <p class="text-xs text-gray-400">
-                                Otomatis dihitung dari seluruh variant.
-                            </p>
-
+                <div x-show="variantTypes.length > 0" class="mt-5 rounded-xl bg-gray-50 border border-gray-200 p-4">
+                    <div class="flex gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                        </svg>
+                        <div class="text-sm text-gray-600">
+                            <p class="font-semibold text-gray-800">Tips Variant</p>
+                            <p class="mt-1">Variant pertama biasanya digunakan untuk <strong>Warna</strong>. Jika ada variant kedua, gunakan <strong>Ukuran</strong>. Variant ketiga dan seterusnya dapat digunakan untuk kebutuhan lain.</p>
                         </div>
-
-                        <div class="text-lg font-semibold text-gray-800">
-
-                            <span id="totalStock">
-                                0
-                            </span>
-
-                            <span id="stockUnit">
-                                pcs
-                            </span>
-
-                        </div>
-
                     </div>
-
                 </div>
 
             </div>
-
         </div>
 
+        {{-- TABEL KOMBINASI STOK --}}
+        <div x-show="variantTypes.length > 0 && combinations.length > 0" x-cloak class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-900">Kombinasi Variant & Stok</h2>
+                        <p class="text-sm text-gray-500 mt-1">Isi harga (opsional) dan stok untuk setiap kombinasi variant.</p>
+                    </div>
+                    <div class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-100 text-sm font-semibold text-gray-700">
+                        <span>Total kombinasi:</span>
+                        <span x-text="combinations.length" class="text-gray-900"></span>
+                    </div>
+                </div>
+            </div>
 
-        {{-- ACTION --}}
-        <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+            <div class="p-6">
 
-            <a href="{{ route('products.index') }}"
-                class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition">
+                {{-- DESKTOP TABLE --}}
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <template x-for="(variant, variantIndex) in variantTypes" :key="'head-' + variant.id">
+                                    <th class="text-left py-3 px-3 font-semibold text-gray-600" x-text="variant.name || ('Variant ' + (variantIndex + 1))"></th>
+                                </template>
+                                <th class="text-left py-3 px-3 font-semibold text-gray-600">SKU Variant</th>
+                                <th class="text-right py-3 px-3 font-semibold text-gray-600">Harga</th>
+                                <th class="text-right py-3 px-3 font-semibold text-gray-600">Stok</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            <template x-for="(combination, index) in combinations" :key="combination.id">
+                                <tr class="hover:bg-gray-50 transition">
 
-                Batal
+                                    <template x-for="(attribute, attributeIndex) in combination.attributes" :key="'attr-' + combination.id + '-' + attributeIndex">
+                                        <td class="py-3 px-3">
+                                            <span class="inline-flex px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-700" x-text="attribute"></span>
+                                            {{-- WAJIB: kirim attribute value ini ke server --}}
+                                            <input type="hidden" :name="'variants[' + index + '][attributes][' + attributeIndex + ']'" :value="attribute">
+                                        </td>
+                                    </template>
 
-            </a>
+                                    <td class="py-3 px-3">
+                                        <input type="text" :name="'variants[' + index + '][sku_variant]'" x-model="combination.sku_variant" :value="combination.sku_variant" placeholder="SKU"
+                                            class="w-full min-w-[160px] rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none">
+                                    </td>
 
-            <button type="submit"
-                id="submitButton"
-                class="inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition">
+                                    <td class="py-3 px-3">
+                                        <div class="relative">
+                                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">Rp</span>
+                                            <input type="number" min="0" :name="'variants[' + index + '][price]'" x-model.number="combination.price" :placeholder="basePrice"
+                                                class="w-28 ml-auto block rounded-lg border border-gray-300 pl-7 pr-2 py-2 text-sm text-right focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none">
+                                        </div>
+                                    </td>
 
-                Simpan Produk
+                                    <td class="py-3 px-3">
+                                        <input type="number" min="0" :name="'variants[' + index + '][stock]'" x-model.number="combination.stock" required
+                                            class="w-28 ml-auto block rounded-lg border border-gray-300 px-3 py-2 text-sm text-right focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none">
+                                    </td>
 
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- MOBILE CARD --}}
+                <div class="md:hidden space-y-4">
+                    <template x-for="(combination, index) in combinations" :key="'mobile-' + combination.id">
+                        <div class="rounded-xl border border-gray-200 p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-xs font-semibold text-gray-500" x-text="'Kombinasi #' + (index + 1)"></span>
+                            </div>
+
+                            <div class="space-y-3">
+                                <template x-for="(attribute, attributeIndex) in combination.attributes" :key="'mobile-attr-' + combination.id + '-' + attributeIndex">
+                                    <div class="flex items-center justify-between gap-4">
+                                        <span class="text-xs text-gray-500" x-text="variantTypes[attributeIndex]?.name || ('Variant ' + (attributeIndex + 1))"></span>
+                                        <span class="inline-flex px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-700" x-text="attribute"></span>
+                                        <input type="hidden" :name="'variants[' + index + '][attributes][' + attributeIndex + ']'" :value="attribute">
+                                    </div>
+                                </template>
+
+                                <div class="pt-3 border-t border-gray-100">
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">SKU Variant</label>
+                                    <input type="text" :name="'variants[' + index + '][sku_variant]'" x-model="combination.sku_variant"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none" placeholder="SKU Variant">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Harga (opsional)</label>
+                                    <input type="number" min="0" :name="'variants[' + index + '][price]'" x-model.number="combination.price" :placeholder="basePrice"
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-600 mb-1.5">Stok</label>
+                                    <input type="number" min="0" :name="'variants[' + index + '][stock]'" x-model.number="combination.stock" required
+                                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+
+        <div x-show="variantTypes.length > 0 && combinations.length === 0" x-cloak class="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+            <div class="flex gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86l-8.82 15a2 2 0 001.71 2.14h17.64a2 2 0 001.71-2.14l-8.82-15a2 2 0 00-3.42 0z" />
+                </svg>
+                <div>
+                    <p class="font-semibold text-yellow-800">Kombinasi belum terbentuk</p>
+                    <p class="text-sm text-yellow-700 mt-1">Pastikan setiap variant memiliki nama dan minimal satu nilai.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+            <a href="{{ route('products.index') }}" class="inline-flex items-center justify-center px-5 py-3 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">Batal</a>
+            <button type="submit" :disabled="submitting"
+                class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition disabled:opacity-60 disabled:cursor-not-allowed">
+                <svg x-show="!submitting" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg x-show="submitting" x-cloak class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span x-text="submitting ? 'Menyimpan...' : 'Simpan Produk'"></span>
             </button>
-
         </div>
 
     </form>
 
-@endsection
-
+</div>
 
 @push('scripts')
-
 <script>
-
-document.addEventListener('DOMContentLoaded', function () {
-
-    const variantsContainer = document.getElementById('variantsContainer');
-
-    const addVariantButton = document.getElementById('addVariant');
-
-    const totalStockElement = document.getElementById('totalStock');
-
-    const stockUnitElement = document.getElementById('stockUnit');
-
-    const unitSelect = document.getElementById('unit');
-
-    const productForm = document.getElementById('productForm');
-
-    const submitButton = document.getElementById('submitButton');
-
-    let variantIndex = {{ count($oldVariants) }};
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE TOTAL STOCK
-    |--------------------------------------------------------------------------
-    */
-
-    function updateTotalStock() {
-
-        let total = 0;
-
-        const stockInputs =
-            variantsContainer.querySelectorAll('.variant-stock');
-
-        stockInputs.forEach(function (input) {
-
-            const value = parseInt(input.value) || 0;
-
-            total += value;
-
-        });
-
-        totalStockElement.textContent = total;
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE UNIT
-    |--------------------------------------------------------------------------
-    */
-
-    function updateUnit() {
-
-        stockUnitElement.textContent =
-            unitSelect.value || 'pcs';
-
-    }
-
-    unitSelect.addEventListener('change', updateUnit);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | UPDATE COLOR LABEL
-    |--------------------------------------------------------------------------
-    */
-
-    function updateColorLabel(row) {
-
-        const colorInput =
-            row.querySelector('.variant-color');
-
-        const label =
-            row.querySelector('.variant-color-label');
-
-        if (!colorInput || !label) {
-            return;
-        }
-
-        const color =
-            colorInput.value.trim();
-
-        label.textContent =
-            color || 'variant ini';
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | IMAGE PREVIEW
-    |--------------------------------------------------------------------------
-    */
-
-    function handleImagePreview(input) {
-
-        const row =
-            input.closest('.variant-row');
-
-        const previewContainer =
-            row.querySelector('.image-preview-container');
-
-        previewContainer.innerHTML = '';
-
-        const files =
-            Array.from(input.files);
-
-        const maxSize =
-            2 * 1024 * 1024;
-
-        const allowedTypes = [
-            'image/jpeg',
-            'image/png',
-            'image/jpg',
-            'image/webp'
-        ];
-
-
-        if (files.length === 0) {
-            return;
-        }
-
-
-        let invalidFile = false;
-
-
-        files.forEach(function (file, index) {
-
-            if (!allowedTypes.includes(file.type)) {
-
-                invalidFile = true;
-
-                return;
-
-            }
-
-
-            if (file.size > maxSize) {
-
-                invalidFile = true;
-
-                return;
-
-            }
-
-
-            const wrapper =
-                document.createElement('div');
-
-            wrapper.className =
-                'relative group';
-
-
-            const image =
-                document.createElement('img');
-
-            image.className =
-                'w-full h-32 object-cover rounded-lg border border-gray-200';
-
-
-            const badge =
-                document.createElement('div');
-
-            badge.className =
-                'absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md';
-
-            badge.textContent =
-                index === 0
-                    ? 'Utama'
-                    : index + 1;
-
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload =
-                function (event) {
-
-                    image.src =
-                        event.target.result;
-
-                };
-
-
-            reader.readAsDataURL(file);
-
-
-            wrapper.appendChild(image);
-
-            wrapper.appendChild(badge);
-
-            previewContainer.appendChild(wrapper);
-
-        });
-
-
-        if (invalidFile) {
-
-            alert(
-                'Setiap gambar harus JPG, JPEG, PNG, atau WEBP dan maksimal 2 MB per gambar.'
-            );
-
-            input.value = '';
-
-            previewContainer.innerHTML = '';
-
-        }
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ADD VARIANT
-    |--------------------------------------------------------------------------
-    */
-
-    addVariantButton.addEventListener('click', function () {
-
-        const index =
-            variantIndex;
-
-
-        const row =
-            document.createElement('div');
-
-        row.className =
-            'variant-row border border-gray-200 rounded-xl p-4 md:p-5';
-
-        row.dataset.index =
-            index;
-
-
-        row.innerHTML = `
-
-            <div class="flex items-center justify-between mb-4">
-
-                <div>
-
-                    <h3 class="font-semibold text-gray-800">
-                        Variant #${index + 1}
-                    </h3>
-
-                    <p class="text-xs text-gray-400 mt-1">
-                        Data warna, size, stok dan gambar variant.
-                    </p>
-
-                </div>
-
-                <button
-                    type="button"
-                    class="remove-variant inline-flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 px-3 py-2 rounded-lg text-sm transition"
-                >
-
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke-width="1.5"
-                        stroke="currentColor"
-                        class="w-4 h-4">
-
-                        <path stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244-2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.682-.107 1.022-.166m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0C7.91 2.718 7 3.702 7 4.882v.916m7.5 0a48.667 48.667 0 0 1-7.5 0"
-                        />
-
-                    </svg>
-
-                    Hapus
-
-                </button>
-
-            </div>
-
-
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-                <div class="md:col-span-4">
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-
-                        Warna
-                        <span class="text-red-500">*</span>
-
-                    </label>
-
-                    <input
-                        type="text"
-                        name="variants[${index}][color]"
-                        placeholder="Contoh: Hitam"
-                        class="variant-color w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-
-                </div>
-
-
-                <div class="md:col-span-4">
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Size
-                    </label>
-
-                    <select
-                        name="variants[${index}][size]"
-                        class="variant-size w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-
-                        <option value="">
-                            -- Size --
-                        </option>
-
-                        <option value="XS">XS</option>
-                        <option value="S">S</option>
-                        <option value="M">M</option>
-                        <option value="L">L</option>
-                        <option value="XL">XL</option>
-                        <option value="XXL">XXL</option>
-                        <option value="XXXL">XXXL</option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="md:col-span-4">
-
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-
-                        Stok
-                        <span class="text-red-500">*</span>
-
-                    </label>
-
-                    <input
-                        type="number"
-                        name="variants[${index}][stock]"
-                        value="0"
-                        min="0"
-                        required
-                        class="variant-stock w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-
-                </div>
-
-            </div>
-
-
-            <div class="mt-5 pt-5 border-t border-gray-100">
-
-                <div class="mb-3">
-
-                    <label class="block text-sm font-medium text-gray-700">
-
-                        Gambar Variant
-
-                        <span class="text-gray-400 font-normal">
-                            (opsional)
-                        </span>
-
-                    </label>
-
-                    <p class="text-xs text-gray-400 mt-1">
-
-                        Upload beberapa gambar untuk warna
-                        <strong class="variant-color-label">
-                            variant ini
-                        </strong>.
-
-                    </p>
-
-                </div>
-
-
-                <input
-                    type="file"
-                    name="variants[${index}][images][]"
-                    class="variant-images w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    accept="image/jpeg,image/png,image/jpg,image/webp"
-                    multiple
-                >
-
-
-                <p class="text-xs text-gray-400 mt-1">
-
-                    Bisa memilih banyak gambar sekaligus.
-                    Format JPG, JPEG, PNG, WEBP.
-                    Maksimal 2 MB per gambar.
-
-                </p>
-
-
-                <div class="image-preview-container mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                </div>
-
-            </div>
-
-        `;
-
-
-        variantsContainer.appendChild(row);
-
-        variantIndex++;
-
-        updateTotalStock();
-
-    });
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | REMOVE VARIANT
-    |--------------------------------------------------------------------------
-    */
-
-    variantsContainer.addEventListener(
-        'click',
-        function (event) {
-
-            const button =
-                event.target.closest('.remove-variant');
-
-            if (!button) {
+function productCreateForm() {
+    return {
+        submitting: false,
+        mainImagePreview: null,
+        baseSku: '{{ old('sku') }}',
+        basePrice: {{ (int) old('price', 0) }},
+
+        variantTypes: @js(
+            old('variant_groups', [
+                ['name' => '', 'values' => [['name' => '', 'image' => null]]],
+            ])
+        ).map((variant, index) => {
+            return {
+                id: Date.now() + index,
+                name: variant.name || '',
+                values: Array.isArray(variant.values) && variant.values.length
+                    ? variant.values.map((value, valueIndex) => {
+                        return {
+                            id: Date.now() + index + valueIndex + Math.random(),
+                            name: typeof value === 'object' ? (value.name || '') : (value || ''),
+                            image: null,
+                            preview: typeof value === 'object' ? (value.image || null) : null
+                        };
+                    })
+                    : [{ id: Date.now() + Math.random(), name: '', image: null, preview: null }]
+            };
+        }),
+
+        combinations: [],
+
+        init() {
+            this.refreshCombinations();
+        },
+
+        previewMainImage(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) { this.mainImagePreview = null; return; }
+            this.mainImagePreview = URL.createObjectURL(file);
+        },
+
+        previewVariantImage(event, variantIndex, valueIndex) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                this.variantTypes[variantIndex].values[valueIndex].image = null;
+                this.variantTypes[variantIndex].values[valueIndex].preview = null;
                 return;
             }
+            this.variantTypes[variantIndex].values[valueIndex].image = file;
+            this.variantTypes[variantIndex].values[valueIndex].preview = URL.createObjectURL(file);
+        },
 
+        addVariantType() {
+            const index = this.variantTypes.length;
+            this.variantTypes.push({
+                id: Date.now() + Math.random(),
+                name: index === 0 ? 'Warna' : index === 1 ? 'Ukuran' : '',
+                values: [{ id: Date.now() + Math.random(), name: '', image: null, preview: null }]
+            });
+            this.refreshCombinations();
+            this.$nextTick(() => {
+                const inputs = document.querySelectorAll('input[name^="variant_groups"][name$="[name]"]');
+                const lastInput = inputs[inputs.length - 1];
+                if (lastInput) lastInput.focus();
+            });
+        },
 
-            const rows =
-                variantsContainer.querySelectorAll('.variant-row');
+        removeVariantType(index) {
+            this.variantTypes.splice(index, 1);
+            this.refreshCombinations();
+        },
 
+        addVariantValue(variantIndex) {
+            this.variantTypes[variantIndex].values.push({ id: Date.now() + Math.random(), name: '', image: null, preview: null });
+            this.refreshCombinations();
+        },
 
-            if (rows.length <= 1) {
-
-                alert(
-                    'Minimal harus ada 1 variant produk.'
-                );
-
+        removeVariantValue(variantIndex, valueIndex) {
+            const values = this.variantTypes[variantIndex].values;
+            if (values.length <= 1) {
+                values[0].name = '';
+                values[0].image = null;
+                values[0].preview = null;
+                this.refreshCombinations();
                 return;
-
             }
+            values.splice(valueIndex, 1);
+            this.refreshCombinations();
+        },
 
-
-            button.closest('.variant-row').remove();
-
-            updateTotalStock();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | STOCK CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    variantsContainer.addEventListener(
-        'input',
-        function (event) {
-
-            if (
-                event.target.classList.contains(
-                    'variant-stock'
-                )
-            ) {
-
-                updateTotalStock();
-
-            }
-
-
-            if (
-                event.target.classList.contains(
-                    'variant-color'
-                )
-            ) {
-
-                updateColorLabel(
-                    event.target.closest('.variant-row')
-                );
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | IMAGE CHANGE
-    |--------------------------------------------------------------------------
-    */
-
-    variantsContainer.addEventListener(
-        'change',
-        function (event) {
-
-            if (
-                event.target.classList.contains(
-                    'variant-images'
-                )
-            ) {
-
-                handleImagePreview(
-                    event.target
-                );
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | FORM SUBMIT
-    |--------------------------------------------------------------------------
-    */
-
-    productForm.addEventListener(
-        'submit',
-        function (event) {
-
-            const rows =
-                variantsContainer.querySelectorAll(
-                    '.variant-row'
-                );
-
-
-            if (rows.length === 0) {
-
-                event.preventDefault();
-
-                alert(
-                    'Minimal harus ada 1 variant produk.'
-                );
-
-                return;
-
-            }
-
-
-            let valid = true;
-
-
-            rows.forEach(function (row) {
-
-                const color =
-                    row.querySelector('.variant-color');
-
-                const size =
-                    row.querySelector('.variant-size');
-
-                const stock =
-                    row.querySelector('.variant-stock');
-
-
-                /*
-                | Variant harus memiliki warna atau size
-                */
-
-                if (
-                    color.value.trim() === '' &&
-                    size.value.trim() === ''
-                ) {
-
-                    valid = false;
-
-                    color.focus();
-
-                }
-
-
-                /*
-                | Stock tidak boleh negatif
-                */
-
-                if (
-                    parseInt(stock.value) < 0
-                ) {
-
-                    valid = false;
-
-                    stock.focus();
-
-                }
-
+        refreshCombinations() {
+            const validVariants = this.variantTypes.filter(variant => {
+                return variant.name && variant.name.trim() !== '' &&
+                    Array.isArray(variant.values) &&
+                    variant.values.some(value => value.name && value.name.trim() !== '');
             });
 
+            if (!validVariants.length) { this.combinations = []; return; }
 
-            if (!valid) {
+            const valueGroups = validVariants.map(variant => {
+                return variant.values
+                    .filter(value => value.name && value.name.trim() !== '')
+                    .map(value => value.name.trim());
+            });
 
-                event.preventDefault();
+            if (valueGroups.some(group => group.length === 0)) { this.combinations = []; return; }
 
-                alert(
-                    'Setiap variant harus memiliki warna atau size dan stok yang valid.'
-                );
+            const cartesian = (arrays) => {
+                return arrays.reduce((acc, current) => {
+                    const result = [];
+                    acc.forEach(combination => {
+                        current.forEach(value => { result.push([...combination, value]); });
+                    });
+                    return result;
+                }, [[]]);
+            };
 
-                return;
+            const generated = cartesian(valueGroups);
+            const oldCombinations = this.combinations || [];
 
-            }
+            this.combinations = generated.map(attributes => {
+                const existing = oldCombinations.find(item => JSON.stringify(item.attributes) === JSON.stringify(attributes));
+                return {
+                    id: existing?.id || Date.now() + Math.random(),
+                    attributes,
+                    sku_variant: existing?.sku_variant || this.generateSku(attributes),
+                    price: existing?.price ?? null,
+                    stock: existing?.stock ?? 0
+                };
+            });
+        },
 
+        generateSku(attributes) {
+            const values = attributes
+                .filter(value => value && value.trim() !== '')
+                .map(value => value.trim().toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/^-+|-+$/g, ''));
+            const suffix = values.join('-');
+            const base = (this.baseSku || '').trim();
+            if (base && suffix) return base + '-' + suffix;
+            return suffix || base;
+        },
 
-            /*
-            | Prevent double submit
-            */
-
-            submitButton.disabled =
-                true;
-
-            submitButton.classList.add(
-                'opacity-50',
-                'cursor-not-allowed'
-            );
-
-            submitButton.textContent =
-                'Menyimpan...';
-
+        prepareSubmit() {
+            this.submitting = true;
+            this.combinations.forEach((combination) => {
+                combination.stock = Number(combination.stock || 0);
+                if (!combination.sku_variant || !combination.sku_variant.trim()) {
+                    combination.sku_variant = this.generateSku(combination.attributes);
+                }
+            });
         }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | INITIAL
-    |--------------------------------------------------------------------------
-    */
-
-    document
-        .querySelectorAll('.variant-row')
-        .forEach(function (row) {
-
-            updateColorLabel(row);
-
-        });
-
-
-    updateTotalStock();
-
-    updateUnit();
-
-});
-
+    };
+}
 </script>
-
 @endpush
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+
+@endsection

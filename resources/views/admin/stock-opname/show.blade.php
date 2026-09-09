@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="max-w-6xl mx-auto p-4">
+<div class="max-w-7xl mx-auto p-4">
 
     {{-- ========================================================= --}}
     {{-- HEADER --}}
@@ -19,7 +19,6 @@
                 class="text-gray-400 hover:text-amber-600 shrink-0"
                 title="Kembali"
             >
-
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="h-5 w-5"
@@ -28,11 +27,10 @@
                 >
                     <path
                         fill-rule="evenodd"
-                        d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414-1.414L8.414 10l4.293 4.293a1 1 0 010 1.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414z"
+                        d="M12.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L8.414 10l4.293 4.293a1 1 0 010 1.414 1.414 0 011.414L8.414 10l4.293 4.293a1 1 0 010 1.414 1.414 0 01-1.414 1.414z"
                         clip-rule="evenodd"
                     />
                 </svg>
-
             </a>
 
             <div>
@@ -42,7 +40,7 @@
                 </h1>
 
                 <p class="text-sm text-gray-500">
-                    {{ $stockOpname->opname_date->format('d F Y') }}
+                    {{ \Carbon\Carbon::parse($stockOpname->opname_date)->translatedFormat('d F Y') }}
                 </p>
 
             </div>
@@ -51,7 +49,7 @@
 
 
         {{-- ========================================================= --}}
-        {{-- ACTION BUTTON --}}
+        {{-- ACTION --}}
         {{-- ========================================================= --}}
 
         <div class="flex items-center gap-2">
@@ -141,6 +139,7 @@
 
 
             {{-- STATUS --}}
+
             @if ($stockOpname->status === 'completed')
 
                 <span
@@ -173,6 +172,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
             {{-- TANGGAL --}}
+
             <div class="bg-gray-50 rounded-lg p-4">
 
                 <p class="text-xs text-gray-500 mb-1">
@@ -180,13 +180,14 @@
                 </p>
 
                 <p class="font-medium text-gray-800">
-                    {{ $stockOpname->opname_date->format('d/m/Y') }}
+                    {{ \Carbon\Carbon::parse($stockOpname->opname_date)->format('d/m/Y') }}
                 </p>
 
             </div>
 
 
             {{-- PETUGAS --}}
+
             <div class="bg-gray-50 rounded-lg p-4">
 
                 <p class="text-xs text-gray-500 mb-1">
@@ -194,17 +195,18 @@
                 </p>
 
                 <p class="font-medium text-gray-800">
-                    {{ $stockOpname->user->name ?? '-' }}
+                    {{ optional($stockOpname->user)->name ?? '-' }}
                 </p>
 
             </div>
 
 
-            {{-- JUMLAH BARANG --}}
+            {{-- JUMLAH PEMERIKSAAN --}}
+
             <div class="bg-gray-50 rounded-lg p-4">
 
                 <p class="text-xs text-gray-500 mb-1">
-                    Jumlah Varian
+                    Jumlah Pemeriksaan
                 </p>
 
                 <p class="font-medium text-gray-800">
@@ -212,7 +214,7 @@
                     {{ $stockOpname->details->count() }}
 
                     <span class="font-normal text-gray-500">
-                        varian
+                        baris
                     </span>
 
                 </p>
@@ -223,6 +225,7 @@
 
 
         {{-- CATATAN --}}
+
         @if ($stockOpname->note)
 
             <div class="mt-4 pt-4 border-t border-gray-100">
@@ -231,7 +234,7 @@
                     Catatan
                 </p>
 
-                <p class="text-sm text-gray-700">
+                <p class="text-sm text-gray-700 whitespace-pre-line">
                     {{ $stockOpname->note }}
                 </p>
 
@@ -243,15 +246,113 @@
 
 
     {{-- ========================================================= --}}
+    {{-- DATA SUMMARY --}}
+    {{-- ========================================================= --}}
+
+    @php
+
+        $details = $stockOpname->details;
+
+        $increaseCount = $details
+            ->where('difference', '>', 0)
+            ->count();
+
+        $decreaseCount = $details
+            ->where('difference', '<', 0)
+            ->count();
+
+        $sameCount = $details
+            ->where('difference', 0)
+            ->count();
+
+        $totalSystemStock = $details->sum('system_stock');
+
+        $totalPhysicalStock = $details->sum('physical_stock');
+
+        $totalDifference = $details->sum('difference');
+
+        $productGroups = $details
+            ->groupBy('product_id')
+            ->values();
+
+    @endphp
+
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+
+        {{-- PRODUK --}}
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+            <p class="text-xs text-gray-500">
+                Produk
+            </p>
+
+            <p class="text-xl font-semibold text-gray-800 mt-1">
+                {{ $productGroups->count() }}
+            </p>
+
+        </div>
+
+
+        {{-- BERTAMBAH --}}
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+            <p class="text-xs text-gray-500">
+                Stok Bertambah
+            </p>
+
+            <p class="text-xl font-semibold text-green-600 mt-1">
+                {{ $increaseCount }}
+            </p>
+
+        </div>
+
+
+        {{-- BERKURANG --}}
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+            <p class="text-xs text-gray-500">
+                Stok Berkurang
+            </p>
+
+            <p class="text-xl font-semibold text-red-600 mt-1">
+                {{ $decreaseCount }}
+            </p>
+
+        </div>
+
+
+        {{-- SESUAI --}}
+
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+
+            <p class="text-xs text-gray-500">
+                Stok Sesuai
+            </p>
+
+            <p class="text-xl font-semibold text-gray-700 mt-1">
+                {{ $sameCount }}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    {{-- ========================================================= --}}
     {{-- PEMERIKSAAN STOK --}}
     {{-- ========================================================= --}}
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
         {{-- HEADER --}}
+
         <div class="p-6 border-b border-gray-100">
 
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                 <div>
 
@@ -266,37 +367,63 @@
                 </div>
 
 
-                {{-- RINGKASAN SELISIH --}}
-                @php
+                {{-- TOTAL STOCK --}}
 
-                    $increaseCount = $stockOpname->details
-                        ->where('difference', '>', 0)
-                        ->count();
+                <div class="grid grid-cols-3 gap-2 text-center">
 
-                    $decreaseCount = $stockOpname->details
-                        ->where('difference', '<', 0)
-                        ->count();
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg">
 
-                    $sameCount = $stockOpname->details
-                        ->where('difference', 0)
-                        ->count();
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">
+                            Sistem
+                        </p>
 
-                @endphp
+                        <p class="text-sm font-semibold text-gray-700">
+                            {{ $totalSystemStock }}
+                        </p>
+
+                    </div>
 
 
-                <div class="flex items-center gap-2 flex-wrap text-xs">
+                    <div class="px-3 py-2 bg-gray-50 rounded-lg">
 
-                    <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-700">
-                        +{{ $increaseCount }} bertambah
-                    </span>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">
+                            Fisik
+                        </p>
 
-                    <span class="px-2.5 py-1 rounded-full bg-red-100 text-red-700">
-                        {{ $decreaseCount }} berkurang
-                    </span>
+                        <p class="text-sm font-semibold text-gray-700">
+                            {{ $totalPhysicalStock }}
+                        </p>
 
-                    <span class="px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
-                        {{ $sameCount }} sesuai
-                    </span>
+                    </div>
+
+
+                    <div class="px-3 py-2 rounded-lg
+                        {{ $totalDifference > 0
+                            ? 'bg-green-50'
+                            : ($totalDifference < 0 ? 'bg-red-50' : 'bg-gray-50')
+                        }}"
+                    >
+
+                        <p class="text-[10px] text-gray-400 uppercase tracking-wide">
+                            Selisih
+                        </p>
+
+                        <p class="text-sm font-semibold
+                            {{ $totalDifference > 0
+                                ? 'text-green-700'
+                                : ($totalDifference < 0 ? 'text-red-700' : 'text-gray-600')
+                            }}"
+                        >
+
+                            @if ($totalDifference > 0)
+                                +{{ $totalDifference }}
+                            @else
+                                {{ $totalDifference }}
+                            @endif
+
+                        </p>
+
+                    </div>
 
                 </div>
 
@@ -304,6 +431,7 @@
 
 
             {{-- SEARCH --}}
+
             <div class="mt-5">
 
                 <div class="relative">
@@ -337,13 +465,13 @@
                 <div class="flex items-center justify-between mt-2">
 
                     <p class="text-xs text-gray-400">
-                        Klik produk untuk melihat variannya.
+                        Klik produk untuk melihat detail variant.
                     </p>
 
                     <p class="text-xs text-gray-500">
 
                         <span id="product-count">
-                            {{ $stockOpname->details->groupBy('product_id')->count() }}
+                            {{ $productGroups->count() }}
                         </span>
 
                         produk
@@ -361,13 +489,6 @@
         {{-- PRODUCT LIST --}}
         {{-- ========================================================= --}}
 
-        @php
-            $productGroups = $stockOpname->details
-                ->groupBy('product_id')
-                ->values();
-        @endphp
-
-
         <div
             id="product-list"
             class="divide-y divide-gray-100"
@@ -377,14 +498,69 @@
 
                 @php
 
-                    $product = $details->first()->product;
+                    $firstDetail = $details->first();
+
+                    $product = $firstDetail->product;
 
                     $productName = $product->name ?? 'Produk';
-                    $productSku = $product->sku ?? '-';
-                    $productUnit = $product->unit ?? '';
 
-                    $totalSystemStock = $details->sum('system_stock');
-                    $totalPhysicalStock = $details->sum('physical_stock');
+                    $productSku = $product->sku ?? '-';
+
+                    $productUnit = $product->unit ?? 'pcs';
+
+                    $productImage = $product->image ?? null;
+
+                    $totalProductSystemStock = $details->sum('system_stock');
+
+                    $totalProductPhysicalStock = $details->sum('physical_stock');
+
+                    $totalProductDifference = $details->sum('difference');
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | AMBIL VARIANT GROUP
+                    |--------------------------------------------------------------------------
+                    */
+
+                    $variantGroups = $product->variant_groups ?? [];
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | FALLBACK
+                    |--------------------------------------------------------------------------
+                    | Kalau product belum punya variant_groups tetapi variant
+                    | masih menggunakan attributes array.
+                    |--------------------------------------------------------------------------
+                    */
+
+                    if (empty($variantGroups)) {
+
+                        $firstVariant = $details
+                            ->map(fn ($detail) => $detail->variant)
+                            ->filter()
+                            ->first();
+
+                        if ($firstVariant && !empty($firstVariant->attributes)) {
+
+                            $variantGroups = collect($firstVariant->attributes)
+                                ->map(function ($value, $index) {
+
+                                    return [
+                                        'name' => match ($index) {
+                                            0 => 'Warna',
+                                            1 => 'Ukuran',
+                                            default => 'Variant ' . ($index + 1),
+                                        },
+                                        'values' => [],
+                                    ];
+
+                                })
+                                ->values()
+                                ->toArray();
+
+                        }
+
+                    }
 
                 @endphp
 
@@ -409,37 +585,51 @@
 
                             <div class="flex items-center gap-3 min-w-0">
 
-                                {{-- ICON --}}
-                                <div
-                                    class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"
-                                >
+                                {{-- PRODUCT IMAGE --}}
 
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="w-5 h-5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
+                                @if ($productImage)
+
+                                    <img
+                                        src="{{ asset('storage/' . $productImage) }}"
+                                        alt="{{ $productName }}"
+                                        class="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
                                     >
-                                        <path
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                        />
-                                    </svg>
 
-                                </div>
+                                @else
+
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0"
+                                    >
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="w-5 h-5"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                            />
+                                        </svg>
+
+                                    </div>
+
+                                @endif
 
 
                                 {{-- PRODUCT INFO --}}
+
                                 <div class="min-w-0">
 
-                                    <h3 class="font-semibold text-sm text-gray-800">
+                                    <h3 class="font-semibold text-sm text-gray-800 truncate">
                                         {{ $productName }}
                                     </h3>
 
-                                    <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                    <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-gray-500">
 
                                         <span>
                                             SKU: {{ $productSku }}
@@ -450,7 +640,7 @@
                                         </span>
 
                                         <span>
-                                            {{ $details->count() }} varian
+                                            {{ $details->count() }} kombinasi
                                         </span>
 
                                     </div>
@@ -461,17 +651,27 @@
 
 
                             {{-- RIGHT --}}
+
                             <div class="flex items-center gap-3 shrink-0">
 
-                                <div class="hidden sm:block text-right">
+                                <div class="hidden md:block text-right">
 
                                     <p class="text-xs text-gray-400">
-                                        Stok sistem
+                                        Selisih
                                     </p>
 
-                                    <p class="text-sm font-semibold text-gray-700">
+                                    <p class="text-sm font-semibold
+                                        {{ $totalProductDifference > 0
+                                            ? 'text-green-600'
+                                            : ($totalProductDifference < 0 ? 'text-red-600' : 'text-gray-600')
+                                        }}"
+                                    >
 
-                                        {{ $totalSystemStock }}
+                                        @if ($totalProductDifference > 0)
+                                            +{{ $totalProductDifference }}
+                                        @else
+                                            {{ $totalProductDifference }}
+                                        @endif
 
                                         {{ $productUnit }}
 
@@ -481,14 +681,15 @@
 
 
                                 {{-- CHEVRON --}}
+
                                 <svg
                                     class="product-chevron w-5 h-5 text-gray-400 transition-transform duration-200"
                                     xmlns="http://www.w3.org/2000/svg"
                                     fill="none"
                                     viewBox="0 0 24 24"
-                                    stroke="currentColor"
                                 >
                                     <path
+                                        stroke="currentColor"
                                         stroke-linecap="round"
                                         stroke-linejoin="round"
                                         stroke-width="2"
@@ -511,19 +712,41 @@
 
                         <div class="overflow-x-auto">
 
-                            <table class="w-full text-sm">
+                            <table class="w-full text-sm min-w-max">
 
                                 <thead class="bg-gray-100 text-gray-600">
 
                                     <tr>
 
+                                        {{-- SKU --}}
+
                                         <th class="p-3 text-left font-medium whitespace-nowrap">
                                             SKU Varian
                                         </th>
 
-                                        <th class="p-3 text-left font-medium whitespace-nowrap">
-                                            Warna / Size
-                                        </th>
+
+                                        {{-- DYNAMIC VARIANT COLUMNS --}}
+
+                                        @if (!empty($variantGroups))
+
+                                            @foreach ($variantGroups as $group)
+
+                                                <th class="p-3 text-left font-medium whitespace-nowrap">
+                                                    {{ $group['name'] ?? 'Variant' }}
+                                                </th>
+
+                                            @endforeach
+
+                                        @else
+
+                                            <th class="p-3 text-left font-medium whitespace-nowrap">
+                                                Variant
+                                            </th>
+
+                                        @endif
+
+
+                                        {{-- STOCK --}}
 
                                         <th class="p-3 text-center font-medium whitespace-nowrap">
                                             Stok Sistem
@@ -551,69 +774,176 @@
                                     @foreach ($details as $detail)
 
                                         @php
+
                                             $variant = $detail->variant;
+
                                             $difference = (int) $detail->difference;
+
+                                            $attributes = $variant?->attributes ?? [];
+
                                         @endphp
 
 
                                         <tr class="hover:bg-white transition">
 
-                                            {{-- SKU --}}
+                                            {{-- ================================================= --}}
+                                            {{-- SKU VARIANT --}}
+                                            {{-- ================================================= --}}
+
                                             <td class="p-3 text-gray-500 whitespace-nowrap">
 
-                                                {{ $variant->sku_variant ?? $productSku }}
+                                                <span class="font-medium text-gray-700">
+                                                    {{ $variant->sku_variant ?? $productSku }}
+                                                </span>
 
                                             </td>
 
 
-                                            {{-- WARNA / SIZE --}}
-                                            <td class="p-3 text-gray-700 whitespace-nowrap">
+                                            {{-- ================================================= --}}
+                                            {{-- DYNAMIC VARIANT --}}
+                                            {{-- ================================================= --}}
 
-                                                @if ($variant)
+                                            @if (!empty($variantGroups))
 
-                                                    {{ $variant->label() }}
+                                                @foreach ($variantGroups as $groupIndex => $group)
 
-                                                @else
+                                                    @php
 
-                                                    -
+                                                        $attributeValue =
+                                                            $attributes[$groupIndex] ?? '-';
 
-                                                @endif
+                                                        $attributeImage = null;
 
-                                            </td>
+                                                        foreach ($group['values'] ?? [] as $value) {
+
+                                                            if (is_array($value)) {
+
+                                                                if (
+                                                                    strcasecmp(
+                                                                        trim((string) ($value['name'] ?? '')),
+                                                                        trim((string) $attributeValue)
+                                                                    ) === 0
+                                                                ) {
+
+                                                                    $attributeImage =
+                                                                        $value['image'] ?? null;
+
+                                                                    break;
+
+                                                                }
+
+                                                            }
+
+                                                        }
+
+                                                    @endphp
 
 
+                                                    <td class="p-3 whitespace-nowrap">
+
+                                                        <div class="flex items-center gap-2">
+
+                                                            {{-- VARIANT IMAGE --}}
+
+                                                            @if ($attributeImage)
+
+                                                                <img
+                                                                    src="{{ asset('storage/' . $attributeImage) }}"
+                                                                    alt="{{ $attributeValue }}"
+                                                                    class="w-8 h-8 rounded-md object-cover border border-gray-200 shrink-0"
+                                                                >
+
+                                                            @endif
+
+
+                                                            <span class="text-gray-700">
+
+                                                                {{ $attributeValue }}
+
+                                                            </span>
+
+                                                        </div>
+
+                                                    </td>
+
+                                                @endforeach
+
+                                            @else
+
+                                                <td class="p-3 text-gray-700 whitespace-nowrap">
+
+                                                    @if ($variant)
+
+                                                        @if (!empty($attributes))
+
+                                                            {{ implode(' / ', $attributes) }}
+
+                                                        @else
+
+                                                            -
+
+                                                        @endif
+
+                                                    @else
+
+                                                        -
+
+                                                    @endif
+
+                                                </td>
+
+                                            @endif
+
+
+                                            {{-- ================================================= --}}
                                             {{-- STOK SISTEM --}}
-                                            <td class="p-3 text-center">
+                                            {{-- ================================================= --}}
 
-                                                <span class="text-gray-700 font-medium">
+                                            <td class="p-3 text-center whitespace-nowrap">
+
+                                                <span class="font-medium text-gray-700">
+
                                                     {{ $detail->system_stock }}
+
                                                 </span>
 
                                                 <span class="text-xs text-gray-400 ml-1">
+
                                                     {{ $productUnit }}
+
                                                 </span>
 
                                             </td>
 
 
+                                            {{-- ================================================= --}}
                                             {{-- STOK FISIK --}}
-                                            <td class="p-3 text-center">
+                                            {{-- ================================================= --}}
 
-                                                <span class="inline-flex items-center justify-center min-w-[3rem] px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-800 font-medium">
+                                            <td class="p-3 text-center whitespace-nowrap">
+
+                                                <span
+                                                    class="inline-flex items-center justify-center min-w-[3rem] px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-800 font-medium"
+                                                >
 
                                                     {{ $detail->physical_stock }}
 
                                                 </span>
 
                                                 <span class="text-xs text-gray-400 ml-1">
+
                                                     {{ $productUnit }}
+
                                                 </span>
 
                                             </td>
 
 
+                                            {{-- ================================================= --}}
                                             {{-- SELISIH --}}
-                                            <td class="p-3 text-center">
+                                            {{-- ================================================= --}}
+
+                                            <td class="p-3 text-center whitespace-nowrap">
 
                                                 @if ($difference > 0)
 
@@ -644,10 +974,25 @@
                                             </td>
 
 
+                                            {{-- ================================================= --}}
                                             {{-- CATATAN --}}
-                                            <td class="p-3 text-gray-600">
+                                            {{-- ================================================= --}}
 
-                                                {{ $detail->note ?? '-' }}
+                                            <td class="p-3 text-gray-600 min-w-[180px]">
+
+                                                @if ($detail->note)
+
+                                                    <span class="whitespace-pre-line">
+                                                        {{ $detail->note }}
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-gray-400">
+                                                        -
+                                                    </span>
+
+                                                @endif
 
                                             </td>
 
@@ -667,7 +1012,10 @@
 
             @empty
 
+                {{-- ================================================= --}}
                 {{-- EMPTY --}}
+                {{-- ================================================= --}}
+
                 <div class="p-10 text-center">
 
                     <div
@@ -704,7 +1052,10 @@
             @endforelse
 
 
+            {{-- ================================================= --}}
             {{-- SEARCH EMPTY --}}
+            {{-- ================================================= --}}
+
             <div
                 id="search-empty"
                 class="hidden p-10 text-center"
@@ -724,7 +1075,7 @@
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            stroke-width="1.8"
+                            stroke-width="2"
                             d="m21 21-4.35-4.35m0 0A7.5 7.5 0 1 0 6.05 6.05a7.5 7.5 0 0 0 10.6 10.6Z"
                         />
                     </svg>
@@ -774,11 +1125,9 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | PRODUCT ACCORDION
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       PRODUCT ACCORDION
+    ========================================================= */
 
     document.querySelectorAll('.product-toggle').forEach(function (button) {
 
@@ -788,10 +1137,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.closest('.product-item');
 
             const variantContainer =
-                productItem.querySelector('.variant-container');
+                productItem?.querySelector('.variant-container');
 
             const chevron =
-                productItem.querySelector('.product-chevron');
+                productItem?.querySelector('.product-chevron');
 
             if (!variantContainer) {
                 return;
@@ -864,11 +1213,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    /*
-    |--------------------------------------------------------------------------
-    | SEARCH PRODUCT
-    |--------------------------------------------------------------------------
-    */
+    /* =========================================================
+       SEARCH PRODUCT
+    ========================================================= */
 
     const searchInput =
         document.getElementById('product-search');
@@ -886,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function searchProducts() {
 
         const keyword =
-            searchInput.value
+            (searchInput?.value || '')
                 .toLowerCase()
                 .trim();
 
@@ -921,7 +1268,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 /*
                 |--------------------------------------------------------------------------
-                | TUTUP VARIANT KETIKA PRODUK DISEMBUNYIKAN
+                | TUTUP VARIANT
                 |--------------------------------------------------------------------------
                 */
 

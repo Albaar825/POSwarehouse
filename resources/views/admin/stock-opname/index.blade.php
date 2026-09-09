@@ -3,8 +3,10 @@
 @section('title', 'Stock Opname')
 
 @push('head')
-    <link rel="stylesheet"
-        href="https://cdn.datatables.net/1.13.8/css/dataTables.dataTables.min.css">
+    <link
+        rel="stylesheet"
+        href="https://cdn.datatables.net/1.13.8/css/dataTables.dataTables.min.css"
+    >
 
     <style>
         .dataTables_wrapper {
@@ -59,15 +61,15 @@
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: #d97706 !important;
+            background: #d97700 !important;
             color: white !important;
-            border-color: #d97706 !important;
+            border-color: #d97700 !important;
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
             background: #fef3c7 !important;
             color: #92400e !important;
-            border-color: #d97706 !important;
+            border-color: #d97700 !important;
         }
 
         .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
@@ -84,6 +86,21 @@
         table.dataTable.no-footer {
             border-bottom: none !important;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Empty State
+        |--------------------------------------------------------------------------
+        */
+
+        #opname-table tbody:empty::after {
+            content: "Belum ada data stock opname.";
+            display: table-cell;
+            text-align: center;
+            padding: 2.5rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
     </style>
 @endpush
 
@@ -96,6 +113,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
 
         <div>
+
             <h1 class="text-lg font-semibold text-gray-800">
                 Stock Opname
             </h1>
@@ -103,12 +121,16 @@
             <p class="text-sm text-gray-500 mt-1">
                 Riwayat pengecekan stok fisik warehouse
             </p>
+
         </div>
 
+
+        {{-- BUTTON CREATE --}}
         <a
             href="{{ route('admin.stock-opname.create') }}"
             class="inline-flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium px-4 py-2.5 rounded-lg transition"
         >
+
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-4 h-4"
@@ -123,6 +145,7 @@
             </svg>
 
             Stock Opname
+
         </a>
 
     </div>
@@ -137,6 +160,7 @@
             <div class="flex items-center justify-between gap-3 flex-wrap">
 
                 <div>
+
                     <h2 class="font-semibold text-gray-800">
                         Riwayat Stock Opname
                     </h2>
@@ -144,14 +168,20 @@
                     <p class="text-xs text-gray-500 mt-1">
                         Daftar pemeriksaan dan penyesuaian stok fisik warehouse.
                     </p>
+
                 </div>
 
+
                 <div class="text-xs text-gray-500">
+
                     Total:
+
                     <span class="font-medium text-gray-800">
                         {{ $opnames->count() }}
                     </span>
+
                     data
+
                 </div>
 
             </div>
@@ -167,6 +197,7 @@
                 class="w-full text-sm"
             >
 
+                {{-- TABLE HEADER --}}
                 <thead class="bg-gray-50 text-gray-600">
 
                     <tr>
@@ -200,15 +231,16 @@
                 </thead>
 
 
+                {{-- TABLE BODY --}}
                 <tbody>
 
-                    @forelse ($opnames as $opname)
+                    @foreach ($opnames as $opname)
 
                         <tr class="border-t border-gray-100 hover:bg-gray-50 transition">
 
                             {{-- NO --}}
                             <td class="p-3">
-                                {{-- nomor diisi oleh DataTables --}}
+                                {{-- Nomor diisi oleh DataTables --}}
                             </td>
 
 
@@ -281,76 +313,60 @@
                             {{-- AKSI --}}
                             <td class="p-3">
 
-                                <a
-                                    href="{{ route('admin.stock-opname.show', $opname) }}"
-                                    class="inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 font-medium hover:underline"
-                                >
+                                <div class="flex items-center gap-3">
 
-                                    Detail
-
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
+                                    {{-- DETAIL --}}
+                                    <a
+                                        href="{{ route('admin.stock-opname.show', $opname) }}"
+                                        class="inline-flex items-center gap-1.5 text-amber-600 hover:text-amber-700 font-medium hover:underline"
                                     >
-                                        <path
-                                            fill-rule="evenodd"
-                                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                            clip-rule="evenodd"
-                                        />
-                                    </svg>
 
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                    @empty
-
-                        <tr>
-
-                            <td
-                                colspan="6"
-                                class="p-10 text-center"
-                            >
-
-                                <div class="flex flex-col items-center justify-center">
-
-                                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                                        Detail
 
                                         <svg
                                             xmlns="http://www.w3.org/2000/svg"
-                                            class="w-6 h-6 text-gray-400"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
+                                            class="w-4 h-4"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
                                         >
                                             <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="1.8"
-                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a3 3 0 006 0M9 5h6"
+                                                fill-rule="evenodd"
+                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                clip-rule="evenodd"
                                             />
                                         </svg>
 
-                                    </div>
-
-                                    <p class="text-sm font-medium text-gray-600">
-                                        Belum ada data stock opname
-                                    </p>
-
-                                    <p class="text-xs text-gray-400 mt-1">
-                                        Silakan buat stock opname baru untuk memulai pengecekan.
-                                    </p>
-
-                                    <a
-                                        href="{{ route('admin.stock-opname.create') }}"
-                                        class="mt-4 text-sm font-medium text-amber-600 hover:text-amber-700"
-                                    >
-                                        + Buat Stock Opname
                                     </a>
+
+
+                                    {{-- EDIT HANYA UNTUK DRAFT --}}
+                                    @if ($opname->status !== 'completed')
+
+                                        <a
+                                            href="{{ route('admin.stock-opname.edit', $opname) }}"
+                                            class="inline-flex items-center gap-1.5 text-gray-600 hover:text-gray-800 font-medium hover:underline"
+                                        >
+
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                class="w-4 h-4"
+                                                viewBox="0 0 20 20"
+                                                fill="currentColor"
+                                            >
+                                                <path
+                                                    d="M17.414 2.586a2 2 0 010 2.828l-9.9 9.9a1 1 0 01-.39.242l-4 1.333a1 1 0 01-1.265-1.265l1.333-4a1 1 0 01.242-.39l9.9-9.9a2 2 0 012.828 0z"
+                                                />
+
+                                                <path
+                                                    d="M12.586 4.586l2.828 2.828"
+                                                />
+                                            </svg>
+
+                                            Edit
+
+                                        </a>
+
+                                    @endif
 
                                 </div>
 
@@ -358,7 +374,7 @@
 
                         </tr>
 
-                    @endforelse
+                    @endforeach
 
                 </tbody>
 
@@ -385,9 +401,22 @@
 
         $('#opname-table').DataTable({
 
+            /*
+            |--------------------------------------------------------------------------
+            | SORTING
+            |--------------------------------------------------------------------------
+            */
+
             order: [
                 [1, 'desc']
             ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAGINATION
+            |--------------------------------------------------------------------------
+            */
 
             pageLength: 10,
 
@@ -396,7 +425,20 @@
                 [10, 25, 50, 'Semua']
             ],
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | COLUMN SETTINGS
+            |--------------------------------------------------------------------------
+            */
+
             columnDefs: [
+
+                /*
+                |--------------------------------------------------------------------------
+                | NOMOR
+                |--------------------------------------------------------------------------
+                */
 
                 {
                     targets: 0,
@@ -405,14 +447,28 @@
 
                     searchable: false,
 
-                    render: function (data, type, row, meta) {
+                    render: function (
+                        data,
+                        type,
+                        row,
+                        meta
+                    ) {
 
-                        return meta.row +
+                        return (
+                            meta.row +
                             meta.settings._iDisplayStart +
-                            1;
+                            1
+                        );
 
                     }
                 },
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | AKSI
+                |--------------------------------------------------------------------------
+                */
 
                 {
                     targets: 5,
@@ -423,6 +479,13 @@
                 }
 
             ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | LANGUAGE
+            |--------------------------------------------------------------------------
+            */
 
             language: {
 
@@ -438,6 +501,8 @@
 
                 zeroRecords: "Data tidak ditemukan",
 
+                emptyTable: "Belum ada data stock opname.",
+
                 paginate: {
 
                     first: "Awal",
@@ -450,9 +515,7 @@
 
                 }
 
-            },
-
-            emptyTable: "Belum ada data stock opname."
+            }
 
         });
 

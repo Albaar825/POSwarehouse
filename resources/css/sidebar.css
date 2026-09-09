@@ -3,24 +3,119 @@
     --hw-black-soft: #1f1f1f;
     --hw-gold: #e8a33c;
     --hw-gold-soft: #f4c874;
+    --hw-sidebar-w: 16rem;   /* 64 */
+    --hw-sidebar-w-collapsed: 5rem; /* 20 */
 }
 
-/* Sidebar container */
+/* ============================================================
+   SIDEBAR CONTAINER
+   ============================================================ */
 .hw-sidebar {
+    width: var(--hw-sidebar-w);
     background: linear-gradient(180deg, var(--hw-black) 0%, var(--hw-black-soft) 100%);
+    box-shadow: 4px 0 24px -8px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s ease-in-out;
 }
 
-/* Link menu di sidebar */
+/* Collapse hanya berlaku di desktop (sm and up) */
+@media (min-width: 640px) {
+    html.hw-sidebar-collapsed .hw-sidebar {
+        width: var(--hw-sidebar-w-collapsed) !important;
+    }
+
+    html.hw-sidebar-collapsed .hw-main-content {
+        margin-left: var(--hw-sidebar-w-collapsed) !important;
+    }
+
+    .hw-main-content {
+        margin-left: var(--hw-sidebar-w);
+        transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+}
+
+/* ============================================================
+   HEADER / LOGO
+   ============================================================ */
+.hw-sidebar-header {
+    position: relative;
+    min-height: 4.5rem;
+}
+
+.hw-logo-badge {
+    background: linear-gradient(135deg, var(--hw-gold-soft), var(--hw-gold));
+    color: #141414;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 10px rgba(232, 163, 60, 0.35);
+}
+
+.hw-logo-text {
+    transition: opacity 0.15s ease, width 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+html.hw-sidebar-collapsed .hw-logo-text {
+    opacity: 0;
+    width: 0;
+    pointer-events: none;
+}
+
+/* Tombol collapse di header sidebar */
+.hw-collapse-toggle {
+    flex-shrink: 0;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    background: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease, transform 0.2s ease;
+}
+
+.hw-collapse-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--hw-gold-soft);
+}
+
+.hw-collapse-toggle svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+html.hw-sidebar-collapsed .hw-collapse-toggle {
+    display: none;
+}
+
+/* Tombol expand di navbar (muncul saat sidebar collapsed) */
+.hw-expand-toggle {
+    display: none;
+}
+
+@media (min-width: 640px) {
+    html.hw-sidebar-collapsed .hw-expand-toggle {
+        display: inline-flex !important;
+    }
+}
+
+/* ============================================================
+   NAV LINKS
+   ============================================================ */
 .hw-nav-link {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     padding: 0.65rem 1rem;
-    border-radius: 0.5rem;
+    border-radius: 0.6rem;
     color: #d1d5db;
     font-size: 0.875rem;
     font-weight: 500;
-    transition: all 0.15s ease;
+    position: relative;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, padding 0.2s ease;
 }
 
 .hw-nav-link:hover {
@@ -29,9 +124,23 @@
 }
 
 .hw-nav-link.active {
-    background-color: var(--hw-gold);
+    background: linear-gradient(135deg, var(--hw-gold-soft), var(--hw-gold));
     color: #141414;
     font-weight: 600;
+    box-shadow: 0 4px 12px -2px rgba(232, 163, 60, 0.4);
+}
+
+/* Aksen garis kecil di kiri untuk link aktif */
+.hw-nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: -0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 60%;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--hw-gold-soft);
 }
 
 .hw-nav-link svg {
@@ -40,24 +149,235 @@
     flex-shrink: 0;
 }
 
-/* Logo badge di atas sidebar */
-.hw-logo-badge {
-    background: var(--hw-gold);
-    color: #141414;
-    font-weight: 800;
-    letter-spacing: 0.5px;
+.hw-nav-text {
+    overflow: hidden;
+    transition: opacity 0.15s ease;
 }
 
-/* Overlay backdrop untuk mobile */
+.hw-nav-section {
+    transition: opacity 0.15s ease, height 0.15s ease;
+    overflow: hidden;
+}
+
+/* ---- Collapsed state: icon-only + tooltip ---- */
+@media (min-width: 640px) {
+    html.hw-sidebar-collapsed .hw-nav-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    html.hw-sidebar-collapsed .hw-nav-text,
+    html.hw-sidebar-collapsed .hw-nav-section {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    html.hw-sidebar-collapsed .hw-nav-link.active::before {
+        left: 0;
+    }
+
+    /* Tooltip muncul saat hover di mode collapsed */
+    html.hw-sidebar-collapsed .hw-nav-link {
+        position: relative;
+    }
+
+    html.hw-sidebar-collapsed .hw-nav-link::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 0.75rem);
+        top: 50%;
+        transform: translateY(-50%) translateX(-6px);
+        background: var(--hw-black-soft);
+        color: #f4f4f5;
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.4rem 0.7rem;
+        border-radius: 0.4rem;
+        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        z-index: 50;
+    }
+
+    html.hw-sidebar-collapsed .hw-nav-link:hover::after {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+/* ============================================================
+   BACKDROP (mobile)
+   ============================================================ */
 .hw-backdrop {
     background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    transition: opacity 0.2s ease;
 }
 
-/* Scrollbar tipis untuk sidebar */
+/* ============================================================
+   SCROLLBAR TIPIS
+   ============================================================ */
 .hw-sidebar::-webkit-scrollbar {
     width: 4px;
 }
 .hw-sidebar::-webkit-scrollbar-thumb {
     background-color: rgba(232, 163, 60, 0.4);
     border-radius: 4px;
+}
+
+/* ============================================================
+   SIDEBAR FOOTER — HOODIE WAREHOUSE
+   ============================================================ */
+
+.hw-sidebar-footer {
+    margin-top: auto;
+    padding: 1rem 1rem 1.1rem;
+    text-align: center;
+    flex-shrink: 0;
+    transition: padding 0.25s ease;
+}
+
+.hw-footer-line {
+    width: 100%;
+    height: 1px;
+    margin-bottom: 1rem;
+
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(232, 163, 60, 0.45),
+        transparent
+    );
+}
+
+/* Brand */
+.hw-footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+
+    color: rgba(255, 255, 255, 0.7);
+
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.2;
+
+    letter-spacing: 0.22em;
+
+    transition:
+        color 0.2s ease,
+        letter-spacing 0.2s ease;
+}
+
+.hw-sidebar-footer:hover .hw-footer-brand {
+    color: var(--hw-gold-soft);
+    letter-spacing: 0.27em;
+}
+
+/* Alamat */
+.hw-footer-address {
+    margin: 0.55rem 0 0;
+
+    color: rgba(255, 255, 255, 0.35);
+
+    font-size: 0.58rem;
+    line-height: 1.5;
+}
+
+/* Copyright */
+.hw-footer-copy {
+    margin: 0.7rem 0 0;
+
+    color: rgba(255, 255, 255, 0.28);
+
+    font-size: 0.55rem;
+    line-height: 1.4;
+}
+
+/* Developer */
+.hw-footer-developer {
+    margin: 0.15rem 0 0;
+
+    color: rgba(255, 255, 255, 0.3);
+
+    font-size: 0.55rem;
+    line-height: 1.4;
+}
+
+.hw-footer-developer strong {
+    color: rgba(232, 163, 60, 0.65);
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   COLLAPSED SIDEBAR
+   ============================================================ */
+
+@media (min-width: 640px) {
+
+    html.hw-sidebar-collapsed .hw-sidebar-footer {
+        padding: 0.75rem 0.5rem 1rem;
+    }
+
+    html.hw-sidebar-collapsed .hw-footer-line {
+        margin-bottom: 0.75rem;
+    }
+
+    html.hw-sidebar-collapsed .hw-footer-brand {
+        font-size: 0;
+        letter-spacing: 0;
+    }
+
+    html.hw-sidebar-collapsed .hw-footer-brand::before {
+        content: "HW";
+
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+
+        color: var(--hw-gold-soft);
+    }
+
+    html.hw-sidebar-collapsed .hw-footer-address,
+    html.hw-sidebar-collapsed .hw-footer-copy,
+    html.hw-sidebar-collapsed .hw-footer-developer {
+        display: none;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 639px) {
+
+    .hw-sidebar-footer {
+        padding-bottom: 1rem;
+    }
+
+    .hw-footer-address {
+        font-size: 0.57rem;
+    }
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hw-footer-brand {
+        transition: none;
+    }
 }

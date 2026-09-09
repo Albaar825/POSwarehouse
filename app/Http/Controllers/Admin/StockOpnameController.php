@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 class StockOpnameController extends Controller
 {
     /**
-     * Daftar stock opname
+     * Daftar Stock Opname
      */
     public function index()
     {
@@ -24,59 +24,95 @@ class StockOpnameController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.stock-opname.index', compact('opnames'));
+        return view(
+            'admin.stock-opname.index',
+            compact('opnames')
+        );
     }
 
     /**
-     * Form stock opname baru
+     * Form Stock Opname Baru
      */
     public function create()
     {
+        /*
+         * Ambil semua produk aktif.
+         *
+         * Variant sekarang bersifat dynamic:
+         * Variant 1, Variant 2, Variant 3, dst.
+         *
+         * JANGAN menggunakan:
+         * orderBy('color')
+         * orderBy('size')
+         *
+         * karena kolom color dan size sudah tidak digunakan.
+         */
         $products = Product::with([
-            'variants' => function ($q) {
-                $q->orderBy('color')
-                    ->orderBy('size');
+            'variants' => function ($query) {
+                $query->orderBy('id');
             }
         ])
             ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
-        return view('admin.stock-opname.create', compact('products'));
+        return view(
+            'admin.stock-opname.create',
+            compact('products')
+        );
     }
 
     /**
-     * Simpan stock opname sebagai DRAFT
+     * Simpan Stock Opname sebagai DRAFT
      *
      * Pada tahap ini:
-     * - belum mengubah stok
-     * - belum membuat stock movement
+     * - tidak mengubah stok
+     * - tidak membuat stock movement
      * - hanya menyimpan hasil pemeriksaan
      */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'opname_date' => 'required|date',
-            'note' => 'nullable|string|max:255',
+            'opname_date' => [
+                'required',
+                'date',
+            ],
 
-            'variants' => 'required|array|min:1',
+            'note' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
-            'variants.*.product_variant_id' =>
-                'required|exists:product_variants,id',
+            'variants' => [
+                'required',
+                'array',
+                'min:1',
+            ],
 
-            'variants.*.physical_stock' =>
-                'required|integer|min:0',
+            'variants.*.product_variant_id' => [
+                'required',
+                'integer',
+                'exists:product_variants,id',
+            ],
 
-            'variants.*.note' =>
-                'nullable|string|max:255',
+            'variants.*.physical_stock' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
+
+            'variants.*.note' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
         ]);
 
         $opname = DB::transaction(function () use ($data) {
 
             /*
-             * Buat opname sebagai DRAFT.
-             *
-             * Belum ada perubahan stok pada tahap ini.
+             * Buat Stock Opname sebagai draft.
              */
             $opname = StockOpname::create([
                 'user_id' => Auth::id(),
@@ -86,7 +122,7 @@ class StockOpnameController extends Controller
             ]);
 
             /*
-             * Simpan semua detail pemeriksaan.
+             * Simpan setiap variant yang diperiksa.
              */
             foreach ($data['variants'] as $row) {
 
@@ -94,18 +130,37 @@ class StockOpnameController extends Controller
                     $row['product_variant_id']
                 );
 
+                /*
+                 * Ambil stok sistem saat opname dibuat.
+                 */
                 $systemStock = (int) $variant->stock;
+
+                /*
+                 * Ambil stok fisik dari hasil pemeriksaan.
+                 */
                 $physicalStock = (int) $row['physical_stock'];
 
+                /*
+                 * Hitung selisih.
+                 *
+                 * Positif = stok fisik lebih banyak
+                 * Negatif = stok fisik lebih sedikit
+                 */
                 $difference = $physicalStock - $systemStock;
 
                 StockOpnameDetail::create([
                     'stock_opname_id' => $opname->id,
+
                     'product_id' => $variant->product_id,
+
                     'product_variant_id' => $variant->id,
+
                     'system_stock' => $systemStock,
+
                     'physical_stock' => $physicalStock,
+
                     'difference' => $difference,
+
                     'note' => $row['note'] ?? null,
                 ]);
             }
@@ -114,7 +169,10 @@ class StockOpnameController extends Controller
         });
 
         return redirect()
-            ->route('admin.stock-opname.show', $opname)
+            ->route(
+                'admin.stock-opname.show',
+                $opname
+            )
             ->with(
                 'success',
                 'Stock opname berhasil dibuat sebagai draft.'
@@ -122,7 +180,9 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * Form edit stock opname
+     * Form Edit Stock Opname
+     *
+     * Hanya draft yang boleh diedit.
      */
     public function edit(StockOpname $stockOpname)
     {
@@ -142,7 +202,7 @@ class StockOpnameController extends Controller
         }
 
         /*
-         * Ambil detail dan relasi.
+         * Load detail dan relasi.
          */
         $stockOpname->load([
             'details.product',
@@ -151,12 +211,12 @@ class StockOpnameController extends Controller
         ]);
 
         /*
-         * Ambil produk aktif beserta variant.
+         * Ambil produk aktif beserta
+         * seluruh dynamic variants.
          */
         $products = Product::with([
-            'variants' => function ($q) {
-                $q->orderBy('color')
-                    ->orderBy('size');
+            'variants' => function ($query) {
+                $query->orderBy('id');
             }
         ])
             ->where('is_active', true)
@@ -164,7 +224,14 @@ class StockOpnameController extends Controller
             ->get();
 
         /*
-         * Mapping detail berdasarkan product_variant_id.
+         * Mapping detail berdasarkan variant.
+         *
+         * Contoh:
+         *
+         * [
+         *     variant_id => detail,
+         *     variant_id => detail,
+         * ]
          */
         $details = $stockOpname->details
             ->keyBy('product_variant_id');
@@ -180,23 +247,26 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * Update / Selesaikan stock opname
+     * Update / Selesaikan Stock Opname
      *
      * Draft -> Completed
      *
-     * Pada tahap ini:
-     * - hitung selisih
-     * - buat stock movement
-     * - update stok variant
-     * - update total stok product
-     * - ubah status menjadi completed
+     * Pada proses ini:
+     *
+     * 1. Ambil stok sistem terbaru
+     * 2. Bandingkan dengan stok fisik
+     * 3. Simpan detail
+     * 4. Buat Stock Movement jika ada selisih
+     * 5. Update stok variant
+     * 6. Update total stok product
+     * 7. Ubah status menjadi completed
      */
     public function update(
         Request $request,
         StockOpname $stockOpname
     ) {
         /*
-         * Jangan izinkan update completed.
+         * Completed tidak boleh diubah.
          */
         if ($stockOpname->status === 'completed') {
             return redirect()
@@ -210,21 +280,44 @@ class StockOpnameController extends Controller
                 );
         }
 
+        /*
+         * Validasi input.
+         */
         $data = $request->validate([
-            'opname_date' => 'required|date',
+            'opname_date' => [
+                'required',
+                'date',
+            ],
 
-            'note' => 'nullable|string|max:255',
+            'note' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
 
-            'variants' => 'required|array|min:1',
+            'variants' => [
+                'required',
+                'array',
+                'min:1',
+            ],
 
-            'variants.*.product_variant_id' =>
-                'required|exists:product_variants,id',
+            'variants.*.product_variant_id' => [
+                'required',
+                'integer',
+                'exists:product_variants,id',
+            ],
 
-            'variants.*.physical_stock' =>
-                'required|integer|min:0',
+            'variants.*.physical_stock' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
 
-            'variants.*.note' =>
-                'nullable|string|max:255',
+            'variants.*.note' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
         ]);
 
         DB::transaction(function () use (
@@ -233,13 +326,20 @@ class StockOpnameController extends Controller
         ) {
 
             /*
-             * Lock stock opname.
+             * Lock Stock Opname.
+             *
+             * Tujuannya mencegah dua proses
+             * menyelesaikan opname yang sama
+             * secara bersamaan.
              */
             $opname = StockOpname::lockForUpdate()
                 ->findOrFail($stockOpname->id);
 
             /*
-             * Pastikan masih draft.
+             * Double protection.
+             *
+             * Kalau sudah completed,
+             * proses dihentikan.
              */
             if ($opname->status === 'completed') {
                 abort(
@@ -249,7 +349,7 @@ class StockOpnameController extends Controller
             }
 
             /*
-             * Update informasi opname.
+             * Update informasi Stock Opname.
              */
             $opname->update([
                 'opname_date' => $data['opname_date'],
@@ -257,14 +357,18 @@ class StockOpnameController extends Controller
             ]);
 
             /*
-             * Detail lama dihapus karena
-             * opname masih dalam status draft.
+             * Hapus detail lama.
+             *
+             * Aman dilakukan karena status masih draft.
              */
             StockOpnameDetail::where(
                 'stock_opname_id',
                 $opname->id
             )->delete();
 
+            /*
+             * Simpan product ID yang terdampak.
+             */
             $affectedProductIds = [];
 
             /*
@@ -273,8 +377,11 @@ class StockOpnameController extends Controller
             foreach ($data['variants'] as $row) {
 
                 /*
-                 * Lock variant untuk mencegah
-                 * perubahan stok bersamaan.
+                 * Lock variant.
+                 *
+                 * Ini penting supaya stok sistem
+                 * yang digunakan adalah stok terbaru
+                 * dan tidak berubah di tengah proses.
                  */
                 $variant = ProductVariant::lockForUpdate()
                     ->findOrFail(
@@ -282,13 +389,18 @@ class StockOpnameController extends Controller
                     );
 
                 /*
-                 * Ambil stok sistem terbaru.
+                 * Stok sistem terbaru.
                  */
                 $systemStock = (int) $variant->stock;
 
-                $physicalStock =
-                    (int) $row['physical_stock'];
+                /*
+                 * Stok fisik hasil pengecekan.
+                 */
+                $physicalStock = (int) $row['physical_stock'];
 
+                /*
+                 * Hitung selisih.
+                 */
                 $difference =
                     $physicalStock - $systemStock;
 
@@ -319,11 +431,32 @@ class StockOpnameController extends Controller
                 ]);
 
                 /*
-                 * Jika ada selisih,
-                 * buat stock movement.
+                 * Kalau ada selisih,
+                 * buat Stock Movement.
                  */
                 if ($difference !== 0) {
 
+                    /*
+                     * Selisih positif:
+                     *
+                     * Stok fisik > stok sistem
+                     *
+                     * Artinya stok bertambah.
+                     */
+                    $movementType =
+                        $difference > 0
+                            ? 'in'
+                            : 'out';
+
+                    /*
+                     * Quantity harus selalu positif.
+                     */
+                    $movementQuantity =
+                        abs($difference);
+
+                    /*
+                     * Buat Stock Movement.
+                     */
                     StockMovement::create([
                         'product_id' =>
                             $variant->product_id,
@@ -335,12 +468,10 @@ class StockOpnameController extends Controller
                             Auth::id(),
 
                         'type' =>
-                            $difference > 0
-                                ? 'in'
-                                : 'out',
+                            $movementType,
 
                         'quantity' =>
-                            abs($difference),
+                            $movementQuantity,
 
                         'source' =>
                             'opname',
@@ -357,7 +488,7 @@ class StockOpnameController extends Controller
 
                     /*
                      * Update stok variant
-                     * menjadi stok fisik.
+                     * menjadi stok fisik sebenarnya.
                      */
                     $variant->update([
                         'stock' =>
@@ -365,35 +496,49 @@ class StockOpnameController extends Controller
                     ]);
                 }
 
+                /*
+                 * Simpan product ID.
+                 *
+                 * Nanti digunakan untuk menghitung
+                 * ulang total stok product.
+                 */
                 $affectedProductIds[] =
                     $variant->product_id;
             }
 
             /*
-             * Sinkronisasi total stok product.
+             * Update total stok setiap product
+             * yang terkena Stock Opname.
              */
             foreach (
                 array_unique($affectedProductIds)
                 as $productId
             ) {
 
-                $total =
+                /*
+                 * Jumlahkan seluruh stok variant
+                 * milik product.
+                 */
+                $totalStock =
                     ProductVariant::where(
                         'product_id',
                         $productId
                     )->sum('stock');
 
+                /*
+                 * Simpan total stok ke products.stock.
+                 */
                 Product::where(
                     'id',
                     $productId
                 )->update([
-                    'stock' => $total,
+                    'stock' =>
+                        $totalStock,
                 ]);
             }
 
             /*
-             * Setelah proses selesai,
-             * ubah status menjadi completed.
+             * Tandai Stock Opname selesai.
              */
             $opname->update([
                 'status' => 'completed',
@@ -412,10 +557,14 @@ class StockOpnameController extends Controller
     }
 
     /**
-     * Detail stock opname
+     * Detail Stock Opname
      */
     public function show(StockOpname $stockOpname)
     {
+        /*
+         * Load semua relasi yang dibutuhkan
+         * oleh halaman show.
+         */
         $stockOpname->load([
             'details.product',
             'details.variant',

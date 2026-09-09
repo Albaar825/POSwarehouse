@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductVariantImage extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'product_variant_id',
         'image',
@@ -17,15 +13,15 @@ class ProductVariantImage extends Model
         'sort_order',
     ];
 
-    protected $casts = [
-        'is_primary' => 'boolean',
-        'sort_order' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'is_primary' => 'boolean',
+            'sort_order' => 'integer',
+        ];
+    }
 
-    /**
-     * Relasi ke product variant
-     */
-    public function variant(): BelongsTo
+    public function variant()
     {
         return $this->belongsTo(
             ProductVariant::class,
@@ -33,10 +29,7 @@ class ProductVariantImage extends Model
         );
     }
 
-    /**
-     * URL gambar
-     */
-    public function getImageUrlAttribute(): string
+    public function url(): string
     {
         return asset('storage/' . $this->image);
     }

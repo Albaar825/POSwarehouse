@@ -45,7 +45,7 @@
         <div class="text-center border-b border-dashed border-gray-300 pb-5">
 
             <h1 class="text-xl font-bold">
-                KASIR & WAREHOUSE
+                Hoodie Warehouse
             </h1>
 
             <p class="text-sm text-gray-500 mt-1">

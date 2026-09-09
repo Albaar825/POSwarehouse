@@ -6,32 +6,48 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\ProductVariantImage;
-use App\Models\StockMovement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    /**
-     * Menampilkan semua produk
-     */
+    /*
+    |--------------------------------------------------------------------------
+    | INDEX
+    |--------------------------------------------------------------------------
+    */
+
     public function index(Request $request)
     {
         $products = Product::with([
-                'category',
-                'variants.images',
-            ])
+            'category',
+            'variants',
+        ])
             ->when(
                 $request->search,
-                fn ($q) =>
-                    $q->where(
-                        'name',
-                        'like',
-                        '%' . $request->search . '%'
-                    )
+                function ($query) use ($request) {
+
+                    $query->where(function ($q) use ($request) {
+
+                        $q->where(
+                            'name',
+                            'like',
+                            '%' . $request->search . '%'
+                        )
+
+                        ->orWhere(
+                            'sku',
+                            'like',
+                            '%' . $request->search . '%'
+                        );
+
+                    });
+
+                }
             )
             ->latest()
             ->get();
@@ -42,12 +58,17 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Form tambah produk
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | CREATE
+    |--------------------------------------------------------------------------
+    */
+
     public function create()
     {
-        $categories = Category::all();
+        $categories =
+            Category::orderBy('name')->get();
 
         return view(
             'admin.products.create',
@@ -55,245 +76,253 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Simpan produk baru
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | STORE
+    |--------------------------------------------------------------------------
+    */
+
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'category_id' => [
-                'nullable',
-                'exists:categories,id',
-            ],
+        $validated =
+            $this->validateProduct($request);
 
-            'sku' => [
-                'required',
-                'string',
-                'max:255',
-                'unique:products,sku',
-            ],
 
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-            ],
-
-            'purchase_price' => [
-                'required',
-                'integer',
-                'min:0',
-            ],
-
-            'price' => [
-                'required',
-                'integer',
-                'min:0',
-            ],
-
-            'min_stock' => [
-                'required',
-                'integer',
-                'min:0',
-            ],
-
-            'unit' => [
-                'required',
-                'string',
-                'max:20',
-            ],
+        DB::transaction(function () use (
+            $request,
+            $validated
+        ) {
 
             /*
-             * VARIANTS
-             */
-            'variants' => [
-                'required',
-                'array',
-                'min:1',
-            ],
+            |--------------------------------------------------------------------------
+            | PROCESS VARIANT GROUP
+            |--------------------------------------------------------------------------
+            */
 
-            'variants.*.color' => [
-                'nullable',
-                'string',
-                'max:50',
-            ],
+            $variantGroups =
+                $this->processVariantGroups(
+                    $request,
+                    $request->input(
+                        'variant_groups',
+                        []
+                    )
+                );
 
-            'variants.*.size' => [
-                'nullable',
-                'string',
-                'max:50',
-            ],
 
-            'variants.*.stock' => [
-                'required',
-                'integer',
-                'min:0',
-            ],
+            $this->validateVariantGroupStructure(
+                $variantGroups
+            );
+
 
             /*
-             * IMAGES PER VARIANT
-             */
-            'variants.*.images' => [
-                'nullable',
-                'array',
-                'max:10',
-            ],
+            |--------------------------------------------------------------------------
+            | VARIANT
+            |--------------------------------------------------------------------------
+            */
 
-            'variants.*.images.*' => [
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
-        ]);
-
-        DB::transaction(function () use ($request, $data) {
-
-            /*
-             * TOTAL STOCK
-             */
-            $totalStock = collect($data['variants'])
-                ->sum('stock');
-
-            /*
-             * CREATE PRODUCT
-             */
-            $product = Product::create([
-                'category_id' => $data['category_id'] ?? null,
-
-                'sku' => $data['sku'],
-
-                'name' => $data['name'],
-
-                'image' => null,
-
-                'purchase_price' => $data['purchase_price'],
-
-                'price' => $data['price'],
-
-                'min_stock' => $data['min_stock'],
-
-                'unit' => $data['unit'],
-
-                'stock' => $totalStock,
-
-                'is_active' => true,
-            ]);
-
-            /*
-             * CREATE VARIANTS
-             */
-            foreach ($data['variants'] as $index => $variantData) {
-
-                $variant = ProductVariant::create([
-                    'product_id' => $product->id,
-
-                    'color' =>
-                        $variantData['color'] ?? null,
-
-                    'size' =>
-                        $variantData['size'] ?? null,
-
-                    'sku_variant' =>
-                        $product->sku . '-' . ($index + 1),
-
-                    'stock' =>
-                        $variantData['stock'],
-                ]);
-
-                /*
-                 * SIMPAN SEMUA GAMBAR VARIANT
-                 */
-                $files = $request->file(
-                    "variants.$index.images",
+            $variants =
+                $request->input(
+                    'variants',
                     []
                 );
 
-                foreach ($files as $imageIndex => $file) {
 
-                    $path = $file->store(
-                        'products/variants',
-                        'public'
+            if (
+                !empty($variantGroups)
+                &&
+                empty($variants)
+            ) {
+
+                throw ValidationException::withMessages([
+                    'variants' =>
+                        'Silakan generate kombinasi variant terlebih dahulu.',
+                ]);
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL STOCK AWAL
+            |--------------------------------------------------------------------------
+            */
+
+            $totalStock =
+                collect($variants)
+                    ->sum(function ($variant) {
+
+                        return (int) (
+                            $variant['stock'] ?? 0
+                        );
+
+                    });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE PRODUCT
+            |--------------------------------------------------------------------------
+            */
+
+            $product =
+                Product::create([
+
+                    'category_id' =>
+                        $validated['category_id']
+                        ?? null,
+
+                    'sku' =>
+                        $validated['sku'],
+
+                    'name' =>
+                        $validated['name'],
+
+                    'purchase_price' =>
+                        $validated['purchase_price']
+                        ?? 0,
+
+                    'price' =>
+                        $validated['price']
+                        ?? 0,
+
+                    'stock' =>
+                        $totalStock,
+
+                    'min_stock' =>
+                        $validated['min_stock']
+                        ?? 0,
+
+                    'unit' =>
+                        $validated['unit']
+                        ?? 'pcs',
+
+                    'variant_groups' =>
+                        $variantGroups,
+
+                    'is_active' =>
+                        $validated['is_active']
+                        ?? true,
+
+                ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | GAMBAR UTAMA
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('image')) {
+
+                $product->image =
+                    $request
+                        ->file('image')
+                        ->store(
+                            'products',
+                            'public'
+                        );
+
+                $product->save();
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE VARIANT
+            |--------------------------------------------------------------------------
+            */
+
+            foreach (
+                $variants as $variantData
+            ) {
+
+                $attributes =
+                    $this->normalizeVariantAttributes(
+                        $variantData['attributes']
+                        ?? [],
+                        $variantGroups
                     );
 
-                    ProductVariantImage::create([
-                        'product_variant_id' =>
-                            $variant->id,
 
-                        'image' =>
-                            $path,
+                $skuVariant =
+                    $this->generateVariantSku(
+                        $product,
+                        $variantData['sku_variant']
+                        ?? null,
+                        $attributes
+                    );
 
-                        /*
-                         * GAMBAR PERTAMA = PRIMARY
-                         */
-                        'is_primary' =>
-                            $imageIndex === 0,
 
-                        'sort_order' =>
-                            $imageIndex,
-                    ]);
-                }
+                $stock =
+                    (int) (
+                        $variantData['stock']
+                        ?? 0
+                    );
 
-                /*
-                 * ==========================================================
-                 * CATAT STOK AWAL SEBAGAI STOK MASUK
-                 * ==========================================================
-                 *
-                 * Contoh:
-                 *
-                 * Hitam / M = 10
-                 *
-                 * Maka otomatis:
-                 *
-                 * type     = in
-                 * quantity = 10
-                 * source   = product_creation
-                 *
-                 */
 
-                if ($variantData['stock'] > 0) {
+                $price =
+                    $this->normalizePrice(
+                        $variantData['price']
+                        ?? null
+                    );
 
-                    StockMovement::create([
-                        'product_id' =>
-                            $product->id,
 
-                        'product_variant_id' =>
-                            $variant->id,
+                ProductVariant::create([
 
-                        'user_id' =>
-                            Auth::id(),
+                    'product_id' =>
+                        $product->getKey(),
 
-                        'type' =>
-                            'in',
+                    'attributes' =>
+                        $attributes,
 
-                        'quantity' =>
-                            $variantData['stock'],
+                    'price' =>
+                        $price,
 
-                        'source' =>
-                            'product_creation',
+                    'sku_variant' =>
+                        $skuVariant,
 
-                        'transaction_id' =>
-                            null,
-                    ]);
-                }
+                    'stock' =>
+                        $stock,
+
+                ]);
+
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SYNC TOTAL STOCK
+            |--------------------------------------------------------------------------
+            */
+
+            $product->syncTotalStock();
+
         });
+
 
         return redirect()
             ->route('products.index')
             ->with(
                 'success',
-                'Barang, varian, gambar, dan stok awal berhasil ditambahkan.'
+                'Produk berhasil ditambahkan.'
             );
     }
 
-    /**
-     * Detail produk
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | SHOW
+    |--------------------------------------------------------------------------
+    */
+
     public function show(Product $product)
     {
         $product->load([
             'category',
-            'variants.images',
+            'variants',
+            'stockMovements',
         ]);
 
         return view(
@@ -302,34 +331,443 @@ class ProductController extends Controller
         );
     }
 
-    /**
-     * Form edit produk
-     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | EDIT
+    |--------------------------------------------------------------------------
+    */
+
     public function edit(Product $product)
     {
-        $categories = Category::all();
-
         $product->load([
-            'variants.images',
+            'category',
+            'variants',
         ]);
 
-        return view(
-            'admin.products.edit',
-            compact(
-                'product',
-                'categories'
-            )
-        );
+        $categories = Category::orderBy('name')->get();
+
+        return view('admin.products.edit', compact(
+            'product',
+            'categories'
+        ));
     }
 
-    /**
-     * Update produk
-     */
-    public function update(
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE
+    |--------------------------------------------------------------------------
+    */
+
+    public function update(Request $request, Product $product)
+    {
+        $validated = $this->validateProduct(
+            $request,
+            $product
+        );
+
+        $validated['category_id'] =
+            $request->input('category_id');
+
+        $validated['brand_id'] =
+            $request->input('brand_id');
+
+        DB::beginTransaction();
+
+        try {
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT DATA
+            |--------------------------------------------------------------------------
+            */
+
+            $product->update([
+
+                'name' =>
+                    $validated['name'],
+
+                'slug' =>
+                    $validated['slug']
+                    ?? $product->slug,
+
+                'description' =>
+                    $validated['description']
+                    ?? null,
+
+                'category_id' =>
+                    $validated['category_id']
+                    ?? null,
+
+                'brand_id' =>
+                    $validated['brand_id']
+                    ?? null,
+
+                'price' =>
+                    $validated['price']
+                    ?? 0,
+
+                'stock' =>
+                    $validated['stock']
+                    ?? 0,
+
+                'unit' =>
+                    $validated['unit']
+                    ?? 'pcs',
+
+                'status' =>
+                    $validated['status']
+                    ?? $product->status,
+
+            ]);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT IMAGE
+            |--------------------------------------------------------------------------
+            */
+
+            if ($request->hasFile('image')) {
+
+                if ($product->image) {
+
+                    Storage::disk('public')
+                        ->delete(
+                            $product->image
+                        );
+
+                }
+
+                $product->image =
+                    $request
+                        ->file('image')
+                        ->store(
+                            'products',
+                            'public'
+                        );
+
+                $product->save();
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VARIANT GROUPS
+            |--------------------------------------------------------------------------
+            */
+
+            $variantGroups =
+                $request->input(
+                    'variant_groups',
+                    []
+                );
+
+            $product->variant_groups =
+                $variantGroups;
+
+            $product->save();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | EXISTING VARIANTS
+            |--------------------------------------------------------------------------
+            */
+
+            $existingVariantIds = [];
+
+
+            foreach (
+                $request->input(
+                    'variants',
+                    []
+                ) as $variantData
+            ) {
+
+                $variantId =
+                    $variantData['id']
+                    ?? null;
+
+
+                $attributes =
+                    $variantData['attributes']
+                    ?? [];
+
+
+                $price =
+                    $variantData['price']
+                    ?? 0;
+
+
+                $skuVariant =
+                    $variantData['sku_variant']
+                    ?? null;
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | EXISTING VARIANT
+                |--------------------------------------------------------------------------
+                |
+                | Stock variant lama TIDAK DIUBAH.
+                |
+                */
+
+                if ($variantId) {
+
+                    $variant =
+                        $product->variants()
+                            ->where(
+                                'id',
+                                $variantId
+                            )
+                            ->first();
+
+
+                    if ($variant) {
+
+                        $existingVariantIds[] =
+                            $variant->id;
+
+
+                        $currentStock =
+                            (int) $variant->stock;
+
+
+                        $variant->update([
+
+                            'attributes' =>
+                                $attributes,
+
+                            'price' =>
+                                $price,
+
+                            'sku_variant' =>
+                                $skuVariant,
+
+                            'stock' =>
+                                $currentStock,
+
+                        ]);
+
+                    }
+
+                    continue;
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | NEW VARIANT
+                |--------------------------------------------------------------------------
+                |
+                | Stock variant baru diambil dari form.
+                |
+                */
+
+                $newStock =
+                    (int) (
+                        $variantData['stock']
+                        ?? 0
+                    );
+
+
+                $variant =
+                    ProductVariant::create([
+
+                        'product_id' =>
+                            $product->getKey(),
+
+                        'attributes' =>
+                            $attributes,
+
+                        'price' =>
+                            $price,
+
+                        'sku_variant' =>
+                            $skuVariant,
+
+                        'stock' =>
+                            $newStock,
+
+                    ]);
+
+
+                $existingVariantIds[] =
+                    $variant->id;
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE VARIANTS YANG DIHAPUS
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($existingVariantIds)) {
+
+                $product->variants()
+                    ->whereNotIn(
+                        'id',
+                        $existingVariantIds
+                    )
+                    ->delete();
+
+            } else {
+
+                $product->variants()
+                    ->delete();
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL STOCK
+            |--------------------------------------------------------------------------
+            */
+
+            $product->syncTotalStock();
+
+
+            DB::commit();
+
+
+            return redirect()
+                ->route('products.index')
+                ->with(
+                    'success',
+                    'Produk berhasil diperbarui.'
+                );
+
+        } catch (\Throwable $e) {
+
+            DB::rollBack();
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Gagal memperbarui produk: '
+                    . $e->getMessage()
+                );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | DESTROY
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy(Product $product)
+    {
+        DB::transaction(function () use (
+            $product
+        ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | GAMBAR UTAMA
+            |--------------------------------------------------------------------------
+            */
+
+            if ($product->image) {
+
+                Storage::disk('public')
+                    ->delete(
+                        $product->image
+                    );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | GAMBAR VARIANT
+            |--------------------------------------------------------------------------
+            */
+
+            $variantImages =
+                $this->extractVariantImages(
+                    $product->variant_groups
+                    ?? []
+                );
+
+
+            foreach (
+                $variantImages as $image
+            ) {
+
+                if ($image) {
+
+                    Storage::disk('public')
+                        ->delete($image);
+
+                }
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE STOCK MOVEMENT
+            |--------------------------------------------------------------------------
+            */
+
+            $product
+                ->stockMovements()
+                ->delete();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | DELETE PRODUCT
+            |--------------------------------------------------------------------------
+            */
+
+            $product->delete();
+
+        });
+
+
+        return redirect()
+            ->route('products.index')
+            ->with(
+                'success',
+                'Produk berhasil dihapus.'
+            );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    protected function validateProduct(
         Request $request,
-        Product $product
-    ) {
-        $data = $request->validate([
+        ?Product $product = null
+    ): array {
+
+        $productId =
+            $product?->getKey();
+
+
+        return $request->validate([
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRODUCT
+            |--------------------------------------------------------------------------
+            */
+
             'category_id' => [
                 'nullable',
                 'exists:categories,id',
@@ -339,7 +777,10 @@ class ProductController extends Controller
                 'required',
                 'string',
                 'max:255',
-                'unique:products,sku,' . $product->id,
+                Rule::unique(
+                    'products',
+                    'sku'
+                )->ignore($productId),
             ],
 
             'name' => [
@@ -348,494 +789,799 @@ class ProductController extends Controller
                 'max:255',
             ],
 
+            'image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
+
             'purchase_price' => [
-                'required',
+                'nullable',
                 'integer',
                 'min:0',
             ],
 
             'price' => [
-                'required',
+                'nullable',
                 'integer',
                 'min:0',
             ],
 
             'min_stock' => [
-                'required',
+                'nullable',
                 'integer',
                 'min:0',
             ],
 
             'unit' => [
-                'required',
+                'nullable',
                 'string',
-                'max:20',
+                'max:50',
             ],
 
-            /*
-             * STATUS
-             */
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
 
+
             /*
-             * VARIANTS
-             */
-            'variants' => [
+            |--------------------------------------------------------------------------
+            | VARIANT GROUP
+            |--------------------------------------------------------------------------
+            */
+
+            'variant_groups' => [
+                'nullable',
+                'array',
+            ],
+
+            'variant_groups.*.name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'variant_groups.*.type' => [
+                'required',
+                'in:parent,child',
+            ],
+
+            'variant_groups.*.values' => [
                 'required',
                 'array',
                 'min:1',
             ],
 
+            'variant_groups.*.values.*.name' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'variant_groups.*.values.*.image' => [
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:5120',
+            ],
+
+            'variant_groups.*.values.*.existing_image' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | VARIANT COMBINATIONS
+            |--------------------------------------------------------------------------
+            */
+
+            'variants' => [
+                'nullable',
+                'array',
+            ],
+
             'variants.*.id' => [
                 'nullable',
                 'integer',
-                'exists:product_variants,id',
             ],
 
-            'variants.*.color' => [
+            'variants.*.attributes' => [
+                'nullable',
+                'array',
+            ],
+
+            'variants.*.sku_variant' => [
                 'nullable',
                 'string',
-                'max:50',
+                'max:255',
             ],
 
-            'variants.*.size' => [
+            'variants.*.price' => [
                 'nullable',
-                'string',
-                'max:50',
-            ],
-
-            'variants.*.stock' => [
-                'required',
                 'integer',
                 'min:0',
             ],
 
             /*
-             * IMAGES BARU
-             */
-            'variants.*.images' => [
+            |--------------------------------------------------------------------------
+            | STOCK VARIANT BARU
+            |--------------------------------------------------------------------------
+            |
+            | Stock hanya digunakan ketika variant baru dibuat.
+            | Stock variant lama tetap diambil dari database.
+            |
+            */
+
+            'variants.*.stock' => [
                 'nullable',
-                'array',
-                'max:10',
+                'integer',
+                'min:0',
             ],
 
-            'variants.*.images.*' => [
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
         ]);
+    }
 
-        DB::transaction(function () use (
-            $request,
-            $data,
-            $product
+
+    /*
+    |--------------------------------------------------------------------------
+    | PROCESS VARIANT GROUPS
+    |--------------------------------------------------------------------------
+    */
+
+    protected function processVariantGroups(
+        Request $request,
+        array $groups,
+        array $oldGroups = []
+    ): array {
+
+        $processed = [];
+
+
+        foreach (
+            $groups as $groupIndex => $group
         ) {
 
-            /*
-             * ==========================================================
-             * UPDATE PRODUCT
-             * ==========================================================
-             */
+            $groupName = trim(
+                (string) (
+                    $group['name']
+                    ?? ''
+                )
+            );
 
-            $product->update([
-                'category_id' =>
-                    $data['category_id'] ?? null,
 
-                'sku' =>
-                    $data['sku'],
+            if ($groupName === '') {
+                continue;
+            }
 
-                'name' =>
-                    $data['name'],
 
-                'purchase_price' =>
-                    $data['purchase_price'],
+            $type =
+                $groupIndex === 0
+                    ? 'parent'
+                    : 'child';
 
-                'price' =>
-                    $data['price'],
 
-                'min_stock' =>
-                    $data['min_stock'],
+            $values =
+                $group['values']
+                ?? [];
 
-                'unit' =>
-                    $data['unit'],
 
-                'is_active' =>
-                    $request->boolean('is_active'),
-            ]);
+            $processedValues = [];
 
-            /*
-             * ID VARIANT YANG MASIH DIPAKAI
-             */
-            $keepIds = [];
 
-            /*
-             * ==========================================================
-             * UPDATE / CREATE VARIANTS
-             * ==========================================================
-             */
             foreach (
-                $data['variants']
-                as $index => $variantData
+                $values as $valueIndex => $value
             ) {
 
-                /*
-                 * ======================================================
-                 * UPDATE VARIANT LAMA
-                 * ======================================================
-                 */
-                if (!empty($variantData['id'])) {
-
-                    $variant = ProductVariant::where(
-                            'product_id',
-                            $product->id
-                        )
-                        ->where(
-                            'id',
-                            $variantData['id']
-                        )
-                        ->firstOrFail();
-
-                    /*
-                     * Simpan stok lama sebelum diubah
-                     */
-                    $oldStock = (int) $variant->stock;
-
-                    /*
-                     * Stok baru dari form
-                     */
-                    $newStock = (int) $variantData['stock'];
-
-                    /*
-                     * Selisih stok
-                     *
-                     * contoh:
-                     * 10 -> 15 = +5
-                     * 10 -> 7  = -3
-                     */
-                    $stockDifference =
-                        $newStock - $oldStock;
-
-                    /*
-                     * UPDATE VARIANT
-                     */
-                    $variant->update([
-                        'color' =>
-                            $variantData['color'] ?? null,
-
-                        'size' =>
-                            $variantData['size'] ?? null,
-
-                        'stock' =>
-                            $newStock,
-                    ]);
-
-                    /*
-                     * ==================================================
-                     * CATAT PERUBAHAN STOK
-                     * ==================================================
-                     */
-                    if ($stockDifference != 0) {
-
-                        StockMovement::create([
-                            'product_id' =>
-                                $product->id,
-
-                            'product_variant_id' =>
-                                $variant->id,
-
-                            'user_id' =>
-                                Auth::id(),
-
-                            'type' =>
-                                $stockDifference > 0
-                                    ? 'in'
-                                    : 'out',
-
-                            'quantity' =>
-                                abs($stockDifference),
-
-                            'source' =>
-                                'product_update',
-
-                            'transaction_id' =>
-                                null,
-                        ]);
-                    }
-
-                } else {
-
-                    /*
-                     * ==================================================
-                     * CREATE VARIANT BARU
-                     * ==================================================
-                     */
-
-                    $variant = ProductVariant::create([
-                        'product_id' =>
-                            $product->id,
-
-                        'color' =>
-                            $variantData['color'] ?? null,
-
-                        'size' =>
-                            $variantData['size'] ?? null,
-
-                        'sku_variant' =>
-                            $product->sku .
-                            '-' .
-                            ($index + 1) .
-                            '-' .
-                            uniqid(),
-
-                        'stock' =>
-                            $variantData['stock'],
-                    ]);
-
-                    /*
-                     * ==================================================
-                     * STOK VARIANT BARU = STOK MASUK
-                     * ==================================================
-                     */
-
-                    if ($variantData['stock'] > 0) {
-
-                        StockMovement::create([
-                            'product_id' =>
-                                $product->id,
-
-                            'product_variant_id' =>
-                                $variant->id,
-
-                            'user_id' =>
-                                Auth::id(),
-
-                            'type' =>
-                                'in',
-
-                            'quantity' =>
-                                $variantData['stock'],
-
-                            'source' =>
-                                'product_update',
-
-                            'transaction_id' =>
-                                null,
-                        ]);
-                    }
-                }
-
-                $keepIds[] = $variant->id;
-
-                /*
-                 * ======================================================
-                 * SIMPAN GAMBAR BARU
-                 * ======================================================
-                 */
-
-                $files = $request->file(
-                    "variants.$index.images",
-                    []
+                $valueName = trim(
+                    (string) (
+                        $value['name']
+                        ?? ''
+                    )
                 );
 
-                if (!empty($files)) {
 
-                    /*
-                     * Cari urutan gambar terakhir
-                     */
-                    $lastSortOrder =
-                        ProductVariantImage::where(
-                            'product_variant_id',
-                            $variant->id
-                        )->max('sort_order');
+                if ($valueName === '') {
+                    continue;
+                }
 
-                    /*
-                     * Apakah sudah punya primary?
-                     */
-                    $hasPrimary =
-                        ProductVariantImage::where(
-                            'product_variant_id',
-                            $variant->id
+
+                /*
+                |--------------------------------------------------------------------------
+                | CARI GAMBAR LAMA
+                |--------------------------------------------------------------------------
+                */
+
+                $oldImage =
+                    $value['existing_image']
+                    ?? null;
+
+
+                if (!$oldImage) {
+
+                    $oldImage =
+                        $this->findOldVariantValueImage(
+                            $oldGroups,
+                            $groupName,
+                            $valueName
+                        );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | UPLOAD GAMBAR BARU
+                |--------------------------------------------------------------------------
+                */
+
+                $newImage = null;
+
+
+                $imageField =
+                    "variant_groups.{$groupIndex}.values.{$valueIndex}.image";
+
+
+                if ($request->hasFile($imageField)) {
+
+                    $file =
+                        $request->file($imageField);
+
+
+                    if (
+                        $file
+                        &&
+                        $file->isValid()
+                    ) {
+
+                        $newImage =
+                            $file->store(
+                                'products/variants',
+                                'public'
+                            );
+
+                    }
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TENTUKAN GAMBAR FINAL
+                |--------------------------------------------------------------------------
+                */
+
+                $finalImage =
+                    $newImage
+                    ?: $oldImage;
+
+
+                $processedValues[] = [
+
+                    'name' =>
+                        $valueName,
+
+                    'image' =>
+                        $finalImage,
+
+                ];
+
+            }
+
+
+            if (
+                !empty($processedValues)
+            ) {
+
+                $processed[] = [
+
+                    'name' =>
+                        $groupName,
+
+                    'type' =>
+                        $type,
+
+                    'values' =>
+                        $processedValues,
+
+                ];
+
+            }
+
+        }
+
+
+        return array_values(
+            $processed
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CARI GAMBAR VALUE LAMA
+    |--------------------------------------------------------------------------
+    */
+
+    protected function findOldVariantValueImage(
+        array $oldGroups,
+        string $groupName,
+        string $valueName
+    ): ?string {
+
+        foreach (
+            $oldGroups as $oldGroup
+        ) {
+
+            $oldGroupName =
+                trim(
+                    (string) (
+                        $oldGroup['name']
+                        ?? ''
+                    )
+                );
+
+
+            if (
+                strcasecmp(
+                    $oldGroupName,
+                    $groupName
+                ) !== 0
+            ) {
+                continue;
+            }
+
+
+            foreach (
+                $oldGroup['values']
+                ?? [] as $oldValue
+            ) {
+
+                if (is_array($oldValue)) {
+
+                    $oldValueName =
+                        trim(
+                            (string) (
+                                $oldValue['name']
+                                ?? ''
+                            )
+                        );
+
+
+                    if (
+                        strcasecmp(
+                            $oldValueName,
+                            $valueName
+                        ) === 0
+                    ) {
+
+                        return $oldValue['image']
+                            ?? null;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+
+        return null;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDATE VARIANT GROUP STRUCTURE
+    |--------------------------------------------------------------------------
+    */
+
+    protected function validateVariantGroupStructure(
+        array $variantGroups
+    ): void {
+
+        if (empty($variantGroups)) {
+            return;
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GROUP PERTAMA HARUS PARENT
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            ($variantGroups[0]['type'] ?? null)
+            !== 'parent'
+        ) {
+
+            throw ValidationException::withMessages([
+                'variant_groups' =>
+                    'Variant pertama harus menjadi Variant Utama.',
+            ]);
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GROUP BERIKUTNYA CHILD
+        |--------------------------------------------------------------------------
+        */
+
+        foreach (
+            $variantGroups as $index => $group
+        ) {
+
+            if (
+                $index > 0
+                &&
+                ($group['type'] ?? null)
+                !== 'child'
+            ) {
+
+                throw ValidationException::withMessages([
+                    'variant_groups' =>
+                        'Variant tambahan harus menggunakan tipe Variant Tambahan.',
+                ]);
+
+            }
+
+
+            if (
+                empty($group['name'])
+            ) {
+
+                throw ValidationException::withMessages([
+                    'variant_groups' =>
+                        'Nama variant tidak boleh kosong.',
+                ]);
+
+            }
+
+
+            if (
+                empty($group['values'])
+            ) {
+
+                throw ValidationException::withMessages([
+                    'variant_groups' =>
+                        'Setiap variant harus memiliki minimal satu value.',
+                ]);
+
+            }
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE ATTRIBUTES
+    |--------------------------------------------------------------------------
+    */
+
+    protected function normalizeVariantAttributes(
+        array $attributes,
+        array $variantGroups
+    ): array {
+
+        $normalized = [];
+
+
+        $groupCount =
+            count($variantGroups);
+
+
+        for (
+            $i = 0;
+            $i < $groupCount;
+            $i++
+        ) {
+
+            $value =
+                $attributes[$i]
+                ?? '';
+
+
+            $normalized[] =
+                trim(
+                    (string) $value
+                );
+
+        }
+
+
+        return $normalized;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | GENERATE VARIANT SKU
+    |--------------------------------------------------------------------------
+    */
+
+    protected function generateVariantSku(
+        Product $product,
+        ?string $requestedSku,
+        array $attributes,
+        ?int $ignoreVariantId = null
+    ): string {
+
+        $requestedSku =
+            trim(
+                (string) (
+                    $requestedSku
+                    ?? ''
+                )
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | GUNAKAN SKU REQUEST
+        |--------------------------------------------------------------------------
+        */
+
+        if ($requestedSku !== '') {
+
+            $sku =
+                $requestedSku;
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUTO GENERATE
+        |--------------------------------------------------------------------------
+        */
+
+        else {
+
+            $attributePart =
+                collect($attributes)
+
+                    ->map(function ($attribute) {
+
+                        return Str::upper(
+                            Str::slug(
+                                (string) $attribute
+                            )
+                        );
+
+                    })
+
+                    ->filter()
+
+                    ->implode('-');
+
+
+            $sku =
+                $product->sku
+                . (
+                    $attributePart
+                        ? '-' . $attributePart
+                        : ''
+                );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | CEK DUPLICATE SKU
+        |--------------------------------------------------------------------------
+        */
+
+        $query =
+            ProductVariant::query()
+                ->where(
+                    'sku_variant',
+                    $sku
+                )
+                ->where(
+                    'product_id',
+                    $product->getKey()
+                );
+
+
+        if (
+            $ignoreVariantId !== null
+        ) {
+
+            $query->where(
+                'id',
+                '!=',
+                $ignoreVariantId
+            );
+
+        }
+
+
+        if ($query->exists()) {
+
+            $baseSku =
+                $sku;
+
+
+            $counter = 2;
+
+
+            do {
+
+                $candidate =
+                    $baseSku
+                    . '-'
+                    . $counter;
+
+
+                $exists =
+                    ProductVariant::query()
+                        ->where(
+                            'sku_variant',
+                            $candidate
                         )
                         ->where(
-                            'is_primary',
-                            true
+                            'product_id',
+                            $product->getKey()
+                        )
+                        ->when(
+                            $ignoreVariantId !== null,
+                            function ($q) use (
+                                $ignoreVariantId
+                            ) {
+
+                                $q->where(
+                                    'id',
+                                    '!=',
+                                    $ignoreVariantId
+                                );
+
+                            }
                         )
                         ->exists();
 
-                    foreach (
-                        $files
-                        as $fileIndex => $file
-                    ) {
 
-                        $path = $file->store(
-                            'products/variants',
-                            'public'
-                        );
+                $counter++;
 
-                        ProductVariantImage::create([
-                            'product_variant_id' =>
-                                $variant->id,
 
-                            'image' =>
-                                $path,
+            } while ($exists);
 
-                            /*
-                             * Jika belum ada primary,
-                             * gambar pertama menjadi primary.
-                             */
-                            'is_primary' =>
-                                !$hasPrimary &&
-                                $fileIndex === 0,
 
-                            'sort_order' =>
-                                $lastSortOrder +
-                                $fileIndex +
-                                1,
-                        ]);
-                    }
-                }
-            }
+            $sku =
+                $candidate;
 
-            /*
-             * ==========================================================
-             * HAPUS VARIANT YANG DIHILANGKAN DARI FORM
-             * ==========================================================
-             */
-
-            $oldVariants = ProductVariant::with('images')
-                ->where(
-                    'product_id',
-                    $product->id
-                )
-                ->whereNotIn(
-                    'id',
-                    $keepIds
-                )
-                ->get();
-
-            foreach ($oldVariants as $oldVariant) {
-
-                /*
-                 * Hapus file fisik gambar
-                 */
-                foreach (
-                    $oldVariant->images
-                    as $image
-                ) {
-
-                    if (
-                        Storage::disk('public')
-                            ->exists($image->image)
-                    ) {
-
-                        Storage::disk('public')
-                            ->delete($image->image);
-                    }
-                }
-
-                /*
-                 * Hapus variant
-                 */
-                $oldVariant->delete();
-            }
-
-            /*
-             * ==========================================================
-             * HITUNG ULANG TOTAL STOCK PRODUK
-             * ==========================================================
-             */
-
-            $totalStock = ProductVariant::where(
-                    'product_id',
-                    $product->id
-                )
-                ->sum('stock');
-
-            $product->update([
-                'stock' =>
-                    $totalStock,
-            ]);
-        });
-
-        return redirect()
-            ->route('products.index')
-            ->with(
-                'success',
-                'Barang, varian, stok, dan gambar berhasil diupdate.'
-            );
-    }
-
-    /**
-     * Hapus produk
-     */
-    public function destroy(Product $product)
-    {
-        /*
-         * Load semua variant + gambar
-         */
-        $product->load([
-            'variants.images',
-        ]);
-
-        /*
-         * Hapus gambar produk lama
-         * jika masih ada dari sistem sebelumnya
-         */
-        if ($product->image) {
-
-            if (
-                Storage::disk('public')
-                    ->exists($product->image)
-            ) {
-
-                Storage::disk('public')
-                    ->delete($product->image);
-            }
         }
 
-        /*
-         * Hapus semua gambar variant
-         */
+
+        return $sku;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | NORMALIZE PRICE
+    |--------------------------------------------------------------------------
+    */
+
+    protected function normalizePrice(
+        $price
+    ): int {
+
+        if (
+            $price === null
+            ||
+            $price === ''
+        ) {
+
+            return 0;
+
+        }
+
+
+        return max(
+            0,
+            (int) $price
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | COMPARE ATTRIBUTES
+    |--------------------------------------------------------------------------
+    */
+
+    protected function attributesEqual(
+        array $first,
+        array $second
+    ): bool {
+
+        $first =
+            array_values(
+                array_map(
+                    function ($value) {
+
+                        return trim(
+                            (string) $value
+                        );
+
+                    },
+                    $first
+                )
+            );
+
+
+        $second =
+            array_values(
+                array_map(
+                    function ($value) {
+
+                        return trim(
+                            (string) $value
+                        );
+
+                    },
+                    $second
+                )
+            );
+
+
+        return $first === $second;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EXTRACT VARIANT IMAGES
+    |--------------------------------------------------------------------------
+    */
+
+    protected function extractVariantImages(
+        array $variantGroups
+    ): array {
+
+        $images = [];
+
+
         foreach (
-            $product->variants
-            as $variant
+            $variantGroups as $group
         ) {
 
             foreach (
-                $variant->images
-                as $image
+                $group['values']
+                ?? [] as $value
             ) {
 
                 if (
-                    Storage::disk('public')
-                        ->exists($image->image)
+                    is_array($value)
+                    &&
+                    !empty($value['image'])
                 ) {
 
-                    Storage::disk('public')
-                        ->delete($image->image);
+                    $images[] =
+                        $value['image'];
+
                 }
+
             }
+
         }
 
-        /*
-         * Hapus product.
-         *
-         * Variant otomatis terhapus karena
-         * cascadeOnDelete.
-         *
-         * Image variant juga otomatis terhapus
-         * karena cascadeOnDelete.
-         */
-        $product->delete();
 
-        return back()
-            ->with(
-                'success',
-                'Barang berhasil dihapus.'
-            );
+        return array_values(
+            array_unique(
+                array_filter($images)
+            )
+        );
     }
 }

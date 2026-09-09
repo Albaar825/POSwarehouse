@@ -385,50 +385,1158 @@
 
 
 /* =========================================================
-   KASIR
+   KASIR DASHBOARD — MODERN / PREMIUM
 ========================================================= */
 
-.kasir-dashboard {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
+:root {
+    --kasir-bg: #f6f7f9;
+    --kasir-card: #ffffff;
+    --kasir-border: #e9eaee;
+    --kasir-text: #17181c;
+    --kasir-muted: #8b909b;
+    --kasir-soft: #f3f4f6;
+    --kasir-gold: #e7a63b;
+    --kasir-gold-light: #fff6e5;
+    --kasir-green: #16a34a;
+    --kasir-purple: #7c3aed;
+    --kasir-blue: #2563eb;
+    --kasir-orange: #ea580c;
+    --kasir-radius: 18px;
+    --kasir-shadow: 0 4px 18px rgba(15, 23, 42, 0.045);
+    --kasir-shadow-hover: 0 12px 30px rgba(15, 23, 42, 0.09);
 }
 
-.kasir-welcome {
+
+/* =========================================================
+   BASE
+========================================================= */
+
+.dashboard-wrapper {
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding-bottom: 30px;
+}
+
+
+/* =========================================================
+   HIDE ADMIN ELEMENTS
+   Dashboard ini ditujukan untuk kasir
+========================================================= */
+
+.dashboard-wrapper > .dashboard-header {
+    margin-bottom: 28px;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.dashboard-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.dashboard-title {
+    margin: 0;
+    color: var(--kasir-text);
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+}
+
+.dashboard-subtitle {
+    margin: 7px 0 0;
+    color: var(--kasir-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.dashboard-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    padding: 9px 13px;
+    background: #ffffff;
+    border: 1px solid var(--kasir-border);
+    border-radius: 11px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
+}
+
+.dashboard-date span {
+    color: #a1a5ae;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.dashboard-date strong {
+    color: #34363d;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   KASIR WELCOME
+========================================================= */
+
+.kasir-welcome-modern {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 20px;
-    padding: 30px;
-    background: #111827;
-    border-radius: 14px;
-    color: white;
+    gap: 30px;
+
+    min-height: 190px;
+    padding: 32px 36px;
+    margin-bottom: 24px;
+
+    background:
+        radial-gradient(
+            circle at 85% 20%,
+            rgba(231, 166, 59, 0.18),
+            transparent 32%
+        ),
+        linear-gradient(
+            135deg,
+            #101114 0%,
+            #191b20 50%,
+            #23262d 100%
+        );
+
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 22px;
+
+    color: #ffffff;
+
+    box-shadow:
+        0 16px 40px rgba(15, 23, 42, 0.14),
+        inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-.kasir-welcome span {
-    font-size: 12px;
-    opacity: 0.7;
+.kasir-welcome-modern::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+
+    width: 260px;
+    height: 260px;
+
+    right: -100px;
+    bottom: -170px;
+
+    border-radius: 50%;
+
+    background: rgba(231, 166, 59, 0.08);
 }
 
-.kasir-welcome h2 {
-    margin: 4px 0;
-    font-size: 24px;
+.kasir-welcome-modern::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+
+    width: 140px;
+    height: 140px;
+
+    right: 220px;
+    top: -90px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
-.kasir-welcome p {
-    margin: 0;
-    font-size: 13px;
-    opacity: 0.7;
+.kasir-welcome-modern > div:first-child {
+    position: relative;
+    z-index: 2;
 }
 
-.kasir-welcome a {
-    flex-shrink: 0;
-    padding: 10px 16px;
-    border-radius: 8px;
-    background: white;
-    color: #111827;
-    font-size: 12px;
+.kasir-welcome-modern > div:first-child span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    color: #d1d3d8;
+    font-size: 11px;
     font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.kasir-welcome-modern > div:first-child span::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+    background: #35d46f;
+
+    box-shadow: 0 0 0 4px rgba(53, 212, 111, 0.12);
+}
+
+.kasir-welcome-modern h2 {
+    margin: 10px 0 5px;
+
+    color: #ffffff;
+    font-size: 29px;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.7px;
+}
+
+.kasir-welcome-modern p {
+    margin: 0;
+
+    color: #9da1aa;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   KASIR ACTIONS
+========================================================= */
+
+.kasir-actions {
+    position: relative;
+    z-index: 5;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+.kasir-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 42px;
+    padding: 0 15px;
+
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 11px;
+
+    background: rgba(255,255,255,0.07);
+    backdrop-filter: blur(12px);
+
+    color: #eeeeef;
+    text-decoration: none;
+
+    font-size: 11px;
+    font-weight: 650;
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.kasir-actions a:hover {
+    transform: translateY(-2px);
+
+    background: rgba(255,255,255,0.13);
+    border-color: rgba(255,255,255,0.16);
+
+    color: #ffffff;
+}
+
+.kasir-actions a:first-child {
+    border-color: rgba(231,166,59,0.5);
+
+    background: linear-gradient(
+        135deg,
+        #f5ca79,
+        #e5a139
+    );
+
+    color: #171717;
+
+    box-shadow:
+        0 8px 22px rgba(231,166,59,0.20);
+}
+
+.kasir-actions a:first-child:hover {
+    background: linear-gradient(
+        135deg,
+        #f8d28b,
+        #e8aa45
+    );
+
+    box-shadow:
+        0 10px 26px rgba(231,166,59,0.28);
+}
+
+
+/* =========================================================
+   GENERAL STAT CARDS
+========================================================= */
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+
+    margin-bottom: 28px;
+}
+
+.dashboard-stats .stat-card {
+    position: relative;
+    overflow: hidden;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    min-width: 0;
+    min-height: 91px;
+
+    padding: 18px;
+
+    background: var(--kasir-card);
+    border: 1px solid var(--kasir-border);
+    border-radius: var(--kasir-radius);
+
+    box-shadow: var(--kasir-shadow);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.dashboard-stats .stat-card::after {
+    content: "";
+
+    position: absolute;
+
+    width: 90px;
+    height: 90px;
+
+    right: -45px;
+    bottom: -55px;
+
+    border-radius: 50%;
+
+    background: #f8f8f9;
+}
+
+.dashboard-stats .stat-card:hover {
+    transform: translateY(-3px);
+
+    border-color: #e2e4e8;
+    box-shadow: var(--kasir-shadow-hover);
+}
+
+.dashboard-stats .stat-card > div:last-child {
+    position: relative;
+    z-index: 2;
+
+    min-width: 0;
+}
+
+.dashboard-stats .stat-card p {
+    margin: 0 0 5px;
+
+    color: #858a95;
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.dashboard-stats .stat-card h3 {
+    margin: 0;
+
+    overflow: hidden;
+
+    color: #16181d;
+    font-size: 19px;
+    font-weight: 800;
+
+    letter-spacing: -0.3px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stat-icon {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+
+    border-radius: 13px;
+
+    font-size: 18px;
+
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.025);
+}
+
+.stat-icon-blue {
+    background: #eef5ff;
+}
+
+.stat-icon-orange {
+    background: #fff5e8;
+}
+
+.stat-icon-purple {
+    background: #f6f0ff;
+}
+
+.stat-icon-green {
+    background: #edfbf2;
+}
+
+
+/* =========================================================
+   KASIR SECTION
+========================================================= */
+
+.kasir-section {
+    margin-bottom: 28px;
+}
+
+.kasir-section-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-bottom: 13px;
+}
+
+.kasir-section-heading h2 {
+    margin: 0;
+
+    color: #181a1f;
+    font-size: 16px;
+    font-weight: 750;
+    letter-spacing: -0.2px;
+}
+
+.kasir-section-heading p {
+    margin: 4px 0 0;
+
+    color: #969ba5;
+    font-size: 11px;
+}
+
+.kasir-today-badge {
+    padding: 6px 10px;
+
+    border: 1px solid #ebedf0;
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #7c818b;
+
+    font-size: 10px;
+    font-weight: 650;
+
+    box-shadow: 0 2px 6px rgba(15,23,42,0.025);
+}
+
+
+/* =========================================================
+   QUICK ACTION
+========================================================= */
+
+.kasir-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 13px;
+}
+
+.kasir-quick-card {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    min-width: 0;
+
+    padding: 17px;
+
+    background: #ffffff;
+    border: 1px solid var(--kasir-border);
+    border-radius: 15px;
+
+    color: inherit;
+    text-decoration: none;
+
+    box-shadow: var(--kasir-shadow);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.kasir-quick-card:hover {
+    transform: translateY(-3px);
+
+    border-color: #dedfe3;
+
+    box-shadow: var(--kasir-shadow-hover);
+}
+
+.kasir-quick-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+
+    border-radius: 12px;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.kasir-quick-icon svg {
+    width: 21px;
+    height: 21px;
+}
+
+.kasir-icon-gold {
+    background: #fff5df;
+    color: #d58c1d;
+}
+
+.kasir-icon-blue {
+    background: #edf4ff;
+    color: #2563eb;
+}
+
+.kasir-icon-purple {
+    background: #f5efff;
+    color: #7c3aed;
+}
+
+.kasir-quick-card > div:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+}
+
+.kasir-quick-card strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #202228;
+
+    font-size: 12px;
+    font-weight: 750;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kasir-quick-card span {
+    display: block;
+
+    margin-top: 4px;
+
+    overflow: hidden;
+
+    color: #999ea7;
+
+    font-size: 10px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kasir-quick-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 28px;
+    height: 28px;
+
+    border-radius: 8px;
+
+    background: #f6f7f8;
+
+    color: #a0a4ac;
+
+    font-size: 15px;
+
+    transition:
+        transform 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.kasir-quick-card:hover .kasir-quick-arrow {
+    transform: translateX(3px);
+
+    background: var(--kasir-gold-light);
+    color: var(--kasir-gold);
+}
+
+
+/* =========================================================
+   KASIR STATS
+========================================================= */
+
+.kasir-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 13px;
+}
+
+.kasir-stat-card {
+    position: relative;
+    overflow: hidden;
+
+    min-width: 0;
+
+    padding: 19px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--kasir-border);
+    border-radius: 15px;
+
+    box-shadow: var(--kasir-shadow);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.kasir-stat-card::before {
+    content: "";
+
+    position: absolute;
+
+    width: 120px;
+    height: 120px;
+
+    right: -70px;
+    top: -70px;
+
+    border-radius: 50%;
+
+    background: #fafafa;
+}
+
+.kasir-stat-card:hover {
+    transform: translateY(-3px);
+
+    box-shadow: var(--kasir-shadow-hover);
+}
+
+.kasir-stat-top {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.kasir-stat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 37px;
+    height: 37px;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.kasir-stat-green {
+    background: #edfaf1;
+    color: #16a34a;
+}
+
+.kasir-stat-purple {
+    background: #f5efff;
+    color: #7c3aed;
+}
+
+.kasir-stat-orange {
+    background: #fff4e9;
+    color: #ea580c;
+}
+
+.kasir-stat-blue {
+    background: #edf4ff;
+    color: #2563eb;
+}
+
+.kasir-stat-label {
+    color: #777c86;
+    font-size: 10px;
+    font-weight: 650;
+}
+
+.kasir-stat-card h3 {
+    position: relative;
+    z-index: 2;
+
+    margin: 16px 0 4px;
+
+    overflow: hidden;
+
+    color: #17191e;
+
+    font-size: 20px;
+    font-weight: 800;
+
+    letter-spacing: -0.5px;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kasir-stat-card p {
+    position: relative;
+    z-index: 2;
+
+    margin: 0;
+
+    color: #9a9fa8;
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.dashboard-card {
+    background: #ffffff;
+
+    border: 1px solid var(--kasir-border);
+    border-radius: var(--kasir-radius);
+
+    box-shadow: var(--kasir-shadow);
+
+    overflow: hidden;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid #f0f1f3;
+}
+
+.card-header h2 {
+    margin: 0;
+
+    color: #181a1f;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.card-header p {
+    margin: 4px 0 0;
+
+    color: #9a9ea7;
+    font-size: 10px;
+}
+
+.card-header a {
+    color: #737780;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.card-header a:hover {
+    color: #e0a13c;
+}
+
+.chart-badge {
+    padding: 6px 9px;
+
+    background: #f5f6f7;
+    border: 1px solid #eceef0;
+
+    border-radius: 7px;
+
+    color: #777c85;
+
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   KASIR MAIN GRID
+========================================================= */
+
+.kasir-main-grid {
+    display: grid;
+    grid-template-columns: 1.7fr 1fr;
+
+    gap: 18px;
+
+    margin-bottom: 20px;
+}
+
+.kasir-sales-card {
+    min-width: 0;
+}
+
+.kasir-chart-container {
+    position: relative;
+
+    height: 315px;
+
+    padding: 20px;
+}
+
+
+/* =========================================================
+   PAYMENT
+========================================================= */
+
+.kasir-payment-list {
+    padding: 5px 20px 10px;
+}
+
+.kasir-payment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    min-height: 76px;
+
+    border-bottom: 1px solid #f1f2f4;
+}
+
+.kasir-payment-item:last-child {
+    border-bottom: 0;
+}
+
+.kasir-payment-left {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 0;
+}
+
+.kasir-payment-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 39px;
+    height: 39px;
+
+    border-radius: 11px;
+
+    background: #f5f6f7;
+
+    color: #50545d;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.kasir-payment-left strong {
+    display: block;
+
+    color: #272930;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.kasir-payment-left span {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #a0a4ac;
+
+    font-size: 9px;
+}
+
+.kasir-payment-item > strong {
+    flex-shrink: 0;
+
+    color: #1c1e23;
+
+    font-size: 10px;
+    font-weight: 750;
+}
+
+
+/* =========================================================
+   RECENT TRANSACTIONS
+========================================================= */
+
+.kasir-recent-card {
+    margin-bottom: 20px;
+}
+
+.dashboard-list {
+    padding: 4px 20px;
+}
+
+.dashboard-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    min-height: 67px;
+
+    padding: 11px 0;
+
+    border-bottom: 1px solid #f1f2f4;
+}
+
+.dashboard-list-item:last-child {
+    border-bottom: 0;
+}
+
+.kasir-transaction-info {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    min-width: 0;
+}
+
+.kasir-invoice-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    width: 39px;
+    height: 39px;
+
+    border-radius: 11px;
+
+    background: #f5f6f7;
+
+    color: #6c717a;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.kasir-transaction-info > div:last-child {
+    min-width: 0;
+}
+
+.kasir-transaction-info strong {
+    display: block;
+
+    max-width: 300px;
+
+    overflow: hidden;
+
+    color: #26282e;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kasir-transaction-info span {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #9da1aa;
+
+    font-size: 9px;
+}
+
+.kasir-transaction-right {
+    display: flex;
+    align-items: flex-end;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+    flex-shrink: 0;
+}
+
+.kasir-transaction-right > strong {
+    color: #1c1e23;
+
+    font-size: 11px;
+    font-weight: 750;
+}
+
+.payment-badge {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    margin: 0 !important;
+
+    padding: 4px 7px;
+
+    border-radius: 6px;
+
+    font-size: 8px !important;
+    font-weight: 750;
+}
+
+.payment-cash {
+    background: #edfaf1;
+    color: #15803d !important;
+}
+
+.payment-qris {
+    background: #edf4ff;
+    color: #2563eb !important;
+}
+
+.payment-credit {
+    background: #fff4e9;
+    color: #c2410c !important;
+}
+
+
+/* =========================================================
+   FOOTER STATUS
+========================================================= */
+
+.kasir-footer-info {
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 14px 17px;
+
+    margin-bottom: 10px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--kasir-border);
+    border-radius: 13px;
+
+    box-shadow: var(--kasir-shadow);
+}
+
+.kasir-status-dot {
+    width: 8px;
+    height: 8px;
+
+    flex-shrink: 0;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow:
+        0 0 0 4px #dcfce7;
+}
+
+.kasir-footer-info strong {
+    display: block;
+
+    color: #34373e;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.kasir-footer-info span {
+    display: block;
+
+    margin-top: 2px;
+
+    color: #9ca0a8;
+
+    font-size: 9px;
+}
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+    min-height: 145px;
+
+    color: #a1a5ad;
+}
+
+.empty-state span {
+    margin-bottom: 7px;
+
+    font-size: 23px;
+}
+
+.empty-state p {
+    margin: 0;
+
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   CHART
+========================================================= */
+
+.kasir-chart-container canvas {
+    max-width: 100%;
 }
 
 
@@ -436,10 +1544,52 @@
    TABLET
 ========================================================= */
 
-@media (max-width: 1280px) {
+@media (max-width: 1200px) {
 
     .dashboard-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kasir-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kasir-quick-grid {
         grid-template-columns: repeat(3, 1fr);
+    }
+
+    .kasir-main-grid {
+        grid-template-columns: 1.4fr 1fr;
+    }
+
+}
+
+
+/* =========================================================
+   SMALL TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+
+    .kasir-main-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kasir-quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kasir-welcome-modern {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .kasir-actions {
+        width: 100%;
+    }
+
+    .kasir-actions a {
+        flex: 1;
     }
 
 }
@@ -451,13 +1601,26 @@
 
 @media (max-width: 768px) {
 
+    .dashboard-wrapper {
+        padding-bottom: 20px;
+    }
+
     .dashboard-header {
         align-items: flex-start;
         flex-direction: column;
+
+        gap: 12px;
+
+        margin-bottom: 20px;
     }
 
     .dashboard-title {
-        font-size: 20px;
+        font-size: 22px;
+        letter-spacing: -0.5px;
+    }
+
+    .dashboard-subtitle {
+        font-size: 11px;
     }
 
     .dashboard-date {
@@ -465,68 +1628,189 @@
     }
 
 
+    /* WELCOME */
+
+    .kasir-welcome-modern {
+        min-height: auto;
+
+        padding: 24px;
+
+        border-radius: 18px;
+
+        margin-bottom: 20px;
+    }
+
+    .kasir-welcome-modern h2 {
+        font-size: 23px;
+    }
+
+    .kasir-welcome-modern p {
+        font-size: 11px;
+    }
+
+    .kasir-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+
+        width: 100%;
+    }
+
+    .kasir-actions a {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .kasir-actions a:first-child {
+        grid-column: span 2;
+    }
+
+
+    /* STAT */
+
     .dashboard-stats {
         grid-template-columns: repeat(2, 1fr);
+
         gap: 10px;
+
+        margin-bottom: 23px;
     }
 
-    .stat-card {
+    .dashboard-stats .stat-card {
+        min-height: 82px;
+
         padding: 14px;
+
+        border-radius: 14px;
     }
 
-    .stat-icon {
-        width: 38px;
-        height: 38px;
-        font-size: 17px;
-    }
-
-    .stat-card h3 {
+    .dashboard-stats .stat-card h3 {
         font-size: 15px;
     }
 
+    .dashboard-stats .stat-card p {
+        font-size: 9px;
+    }
 
-    .dashboard-chart-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    .stat-icon {
+        width: 37px;
+        height: 37px;
+
+        border-radius: 10px;
+
+        font-size: 16px;
     }
 
 
-    .dashboard-content-grid {
-        grid-template-columns: 1fr;
-        gap: 15px;
+    /* SECTION */
+
+    .kasir-section {
+        margin-bottom: 23px;
+    }
+
+    .kasir-section-heading {
+        align-items: flex-start;
+    }
+
+    .kasir-section-heading h2 {
+        font-size: 14px;
+    }
+
+    .kasir-section-heading p {
+        font-size: 10px;
     }
 
 
-    .chart-container,
-    .category-chart-container {
-        height: 250px;
+    /* QUICK */
+
+    .kasir-quick-grid {
+        grid-template-columns: 1fr;
+
+        gap: 9px;
+    }
+
+    .kasir-quick-card {
+        padding: 14px;
+
+        border-radius: 13px;
+    }
+
+    .kasir-quick-icon {
+        width: 40px;
+        height: 40px;
+
+        border-radius: 10px;
+    }
+
+
+    /* KASIR STATS */
+
+    .kasir-stats {
+        grid-template-columns: repeat(2, 1fr);
+
+        gap: 10px;
+    }
+
+    .kasir-stat-card {
         padding: 15px;
+
+        border-radius: 13px;
     }
 
+    .kasir-stat-card h3 {
+        font-size: 16px;
+    }
+
+    .kasir-stat-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+
+    /* CARD */
+
+    .dashboard-card {
+        border-radius: 14px;
+    }
 
     .card-header {
         padding: 15px;
     }
 
+    .card-header h2 {
+        font-size: 12px;
+    }
+
+    .card-header p {
+        font-size: 9px;
+    }
+
+
+    /* CHART */
+
+    .kasir-chart-container {
+        height: 245px;
+
+        padding: 14px;
+    }
+
+
+    /* PAYMENT */
+
+    .kasir-payment-list {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+
+    /* LIST */
 
     .dashboard-list {
-        padding: 4px 15px;
+        padding-left: 15px;
+        padding-right: 15px;
     }
 
-
-    .kasir-dashboard {
-        grid-template-columns: 1fr;
-    }
-
-    .kasir-welcome {
-        align-items: flex-start;
-        flex-direction: column;
-        padding: 22px;
-    }
-
-    .kasir-welcome a {
-        width: 100%;
-        text-align: center;
+    .dashboard-list-item {
+        min-height: 62px;
     }
 
 }
@@ -542,24 +1826,88 @@
         grid-template-columns: 1fr;
     }
 
-    .stat-card {
-        min-height: 68px;
+    .kasir-stats {
+        grid-template-columns: 1fr;
     }
 
-    .dashboard-list-item {
+    .kasir-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .kasir-actions a:first-child {
+        grid-column: auto;
+    }
+
+    .kasir-welcome-modern {
+        padding: 21px;
+    }
+
+    .kasir-welcome-modern h2 {
+        font-size: 21px;
+    }
+
+    .kasir-quick-card {
+        padding: 13px;
+    }
+
+    .kasir-chart-container {
+        height: 225px;
+        padding: 10px;
+    }
+
+    .kasir-payment-item > strong {
+        font-size: 9px;
+    }
+
+    .kasir-transaction-info {
         gap: 8px;
     }
 
-    .dashboard-list-item strong {
-        max-width: 180px;
+    .kasir-invoice-icon {
+        width: 34px;
+        height: 34px;
     }
 
-    .transaction-total {
-        font-size: 11px;
+    .kasir-transaction-info strong {
+        max-width: 145px;
     }
 
-    .dashboard-chart-grid {
-        margin-bottom: 15px;
+    .kasir-transaction-right > strong {
+        font-size: 9px;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL DEVICES
+========================================================= */
+
+@media (max-width: 360px) {
+
+    .kasir-welcome-modern {
+        padding: 18px;
+    }
+
+    .kasir-welcome-modern h2 {
+        font-size: 19px;
+    }
+
+    .dashboard-stats .stat-card {
+        padding: 12px;
+    }
+
+    .kasir-stat-card {
+        padding: 13px;
+    }
+
+    .card-header {
+        padding: 13px;
+    }
+
+    .dashboard-list {
+        padding-left: 13px;
+        padding-right: 13px;
     }
 
 }

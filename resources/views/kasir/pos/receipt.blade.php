@@ -18,8 +18,8 @@
 
     <div class="flex gap-2">
 
-        <a
-            href="{{ route('pos.index') }}"
+        
+          <a href="{{ route('pos.index') }}"
             class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50"
         >
             Transaksi Baru
@@ -223,9 +223,21 @@
             Barang yang sudah dibeli tidak dapat dikembalikan tanpa persetujuan kedua belah pihak
         </p>
 
-         <p class="text-xs text-gray-500 mt-1">
-            Pembayaran hanya di Nomor Rekening ini ....
-        </p>
+        <div class="mt-3 inline-block bg-gray-50 border border-gray-200 rounded-lg px-4 py-2">
+
+            <p class="text-xs text-gray-500">
+                Transfer pembayaran hanya ke rekening berikut
+            </p>
+
+            <p class="text-sm font-semibold text-gray-900 mt-0.5">
+                BCA 8390-0853-04
+            </p>
+
+            <p class="text-xs text-gray-600">
+                a.n. Ferdy Reynaldi
+            </p>
+
+        </div>
 
     </div>
 

@@ -2,6 +2,41 @@
 
 @section('title', 'Riwayat Transaksi')
 
+@push('head')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.dataTables.min.css">
+    <style>
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.65rem;
+            font-size: 0.875rem;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            outline: none;
+            border-color: #111827;
+            box-shadow: 0 0 0 1px #111827;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.35rem 0.65rem !important;
+            margin-left: 2px;
+            border-radius: 0.5rem !important;
+            font-size: 0.85rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #111827 !important;
+            color: white !important;
+            border-color: #111827 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border-color: #d1d5db !important;
+        }
+    </style>
+@endpush
+
 @section('content')
 
 <div class="space-y-6">
@@ -69,7 +104,7 @@
                     </p>
 
                     <p class="text-2xl font-bold text-gray-900 mt-1">
-                        {{ $transactions->total() }}
+                        {{ $transactions->count() }}
                     </p>
 
                 </div>
@@ -306,7 +341,7 @@
                 {{-- Reset --}}
                 @if(request('date_from') || request('date_to'))
 
-                    <a
+                    
                         href="{{ route('transactions.index') }}"
                         class="inline-flex items-center justify-center gap-2
                                px-5 py-2.5 rounded-xl border border-gray-200
@@ -322,8 +357,8 @@
 
 
                 {{-- PDF --}}
-                <a
-                    href="{{ route('transactions.pdf', request()->query()) }}"
+                
+                   <a href="{{ route('transactions.pdf', request()->query()) }}"
                     target="_blank"
                     class="xl:ml-auto inline-flex items-center justify-center gap-2
                            px-5 py-2.5 rounded-xl border border-gray-900
@@ -371,7 +406,7 @@
                 </h3>
 
                 <p class="text-xs text-gray-500 mt-0.5">
-                    {{ $transactions->total() }} transaksi ditemukan
+                    {{ $transactions->count() }} transaksi ditemukan
                 </p>
 
             </div>
@@ -379,45 +414,38 @@
         </div>
 
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto p-2">
 
-            <table class="w-full text-sm">
+            <table id="transactions-table" class="w-full text-sm">
 
                 <thead>
 
                     <tr class="bg-gray-50/80 border-b border-gray-200">
 
-                        {{-- Invoice --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Invoice
                         </th>
 
-                        {{-- Tanggal --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Tanggal
                         </th>
 
-                        {{-- Kasir --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Kasir
                         </th>
 
-                        {{-- Customer --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Customer
                         </th>
 
-                        {{-- Pembayaran --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Pembayaran
                         </th>
 
-                        {{-- Total --}}
                         <th class="text-right px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Total
                         </th>
 
-                        {{-- Aksi --}}
                         <th class="text-right px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Aksi
                         </th>
@@ -429,7 +457,7 @@
 
                 <tbody class="divide-y divide-gray-100">
 
-                    @forelse ($transactions as $transaction)
+                    @foreach ($transactions as $transaction)
 
                         <tr class="hover:bg-gray-50/70 transition">
 
@@ -444,7 +472,7 @@
 
 
                             {{-- Tanggal --}}
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4" data-order="{{ $transaction->created_at->timestamp }}">
 
                                 <div class="text-gray-700">
                                     {{ $transaction->created_at->format('d/m/Y') }}
@@ -531,7 +559,7 @@
 
 
                             {{-- Total --}}
-                            <td class="px-5 py-4 text-right">
+                            <td class="px-5 py-4 text-right" data-order="{{ $transaction->total }}">
 
                                 <span class="font-bold text-gray-900">
                                     Rp {{ number_format($transaction->total, 0, ',', '.') }}
@@ -543,7 +571,7 @@
                             {{-- Aksi --}}
                             <td class="px-5 py-4 text-right">
 
-                                <a
+                                
                                     href="{{ route('pos.receipt', $transaction) }}"
                                     class="inline-flex items-center gap-1.5
                                            px-3 py-1.5 rounded-lg
@@ -576,52 +604,7 @@
 
                         </tr>
 
-                    @empty
-
-                        <tr>
-
-                            <td
-                                colspan="7"
-                                class="px-5 py-16 text-center"
-                            >
-
-                                <div class="flex flex-col items-center">
-
-                                    <div class="w-12 h-12 rounded-full bg-gray-100
-                                                flex items-center justify-center mb-3">
-
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="w-6 h-6 text-gray-400"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            stroke-width="1.6"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M9 14.25l6-6m-6.75 0h.008v.008H8.25V8.25zm7.5 7.5h.008v.008h-.008v-.008z"
-                                            />
-                                        </svg>
-
-                                    </div>
-
-                                    <p class="font-semibold text-gray-700">
-                                        Belum ada transaksi
-                                    </p>
-
-                                    <p class="text-sm text-gray-400 mt-1">
-                                        Tidak ada transaksi pada periode yang dipilih.
-                                    </p>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    @endforelse
+                    @endforeach
 
                 </tbody>
 
@@ -629,20 +612,42 @@
 
         </div>
 
-
-        {{-- Pagination --}}
-        @if ($transactions->hasPages())
-
-            <div class="px-5 py-4 border-t border-gray-100">
-
-                {{ $transactions->withQueryString()->links() }}
-
-            </div>
-
-        @endif
-
     </div>
 
 </div>
 
 @endsection
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#transactions-table').DataTable({
+                order: [[1, 'desc']], // urutkan berdasarkan tanggal terbaru
+                columnDefs: [
+                    {
+                        targets: 6, // kolom Aksi
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    infoFiltered: "(disaring dari _MAX_ total data)",
+                    zeroRecords: "Data tidak ditemukan",
+                    paginate: {
+                        first: "Awal",
+                        last: "Akhir",
+                        next: "Berikutnya",
+                        previous: "Sebelumnya"
+                    }
+                },
+                emptyTable: "Belum ada transaksi pada periode yang dipilih."
+            });
+        });
+    </script>
+@endpush

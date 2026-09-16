@@ -2,6 +2,46 @@
 
 @section('title', 'Open Invoice')
 
+@push('head')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.dataTables.min.css">
+    <style>
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            outline: none;
+            border-color: #e8a33c;
+            box-shadow: 0 0 0 2px rgba(232, 163, 60, 0.25);
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.25rem 0.6rem !important;
+            margin-left: 2px;
+            border-radius: 0.375rem !important;
+            font-size: 0.85rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #e8a33c !important;
+            color: white !important;
+            border-color: #e8a33c !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #fdf1dd !important;
+            color: #92600f !important;
+            border-color: #e8a33c !important;
+        }
+        /* Sembunyikan kontrol bawaan DataTables di atas tabel biar nyatu sama header card kita */
+        #invoice-table_wrapper .dataTables_length {
+            float: none;
+            display: inline-block;
+        }
+    </style>
+@endpush
+
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
@@ -17,8 +57,8 @@
             </p>
         </div>
 
-        <a
-            href="{{ route('pos.index') }}"
+        
+           <a href="{{ route('pos.index') }}"
             class="inline-flex items-center justify-center gap-2 px-4 py-2.5
                    bg-indigo-600 text-white rounded-lg text-sm font-medium
                    hover:bg-indigo-700 transition"
@@ -65,41 +105,35 @@
             </div>
 
 
-            {{-- DESKTOP TABLE --}}
-            <div class="hidden md:block overflow-x-auto">
+            {{-- DESKTOP TABLE (DataTables) --}}
+            <div class="hidden md:block overflow-x-auto p-2">
 
-                <table class="w-full">
+                <table id="invoice-table" class="w-full">
 
                     <thead class="bg-gray-50 border-b border-gray-200">
 
                         <tr>
 
-                            {{-- INVOICE --}}
                             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                 Invoice
                             </th>
 
-                            {{-- TANGGAL --}}
                             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                 Tanggal
                             </th>
 
-                            {{-- CUSTOMER --}}
                             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                 Customer
                             </th>
 
-                            {{-- ITEM --}}
                             <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                 Item
                             </th>
 
-                            {{-- TOTAL --}}
                             <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
                                 Total
                             </th>
 
-                            {{-- AKSI --}}
                             <th class="px-5 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
                                 Aksi
                             </th>
@@ -138,7 +172,7 @@
 
 
                                 {{-- DATE --}}
-                                <td class="px-5 py-4 text-sm text-gray-600">
+                                <td class="px-5 py-4 text-sm text-gray-600" data-order="{{ $transaction->created_at?->timestamp ?? 0 }}">
                                     {{ $transaction->created_at?->format('d/m/Y H:i') ?? '-' }}
                                 </td>
 
@@ -178,7 +212,7 @@
 
 
                                 {{-- TOTAL --}}
-                                <td class="px-5 py-4 text-right">
+                                <td class="px-5 py-4 text-right" data-order="{{ $transaction->total }}">
 
                                     <span class="font-semibold text-gray-900">
                                         Rp {{ number_format($transaction->total, 0, ',', '.') }}
@@ -193,8 +227,8 @@
                                     <div class="flex items-center justify-end gap-2">
 
                                         {{-- BUKA --}}
-                                        <a
-                                            href="{{ route('pos.index', ['open_invoice' => $transaction->id]) }}"
+                                        
+                                           <a href="{{ route('pos.index', ['open_invoice' => $transaction->id]) }}"
                                             class="inline-flex items-center justify-center gap-1.5
                                                    px-3 py-2 rounded-lg
                                                    bg-indigo-600 text-white
@@ -223,8 +257,8 @@
 
 
                                         {{-- EDIT --}}
-                                        <a
-                                            href="{{ route('pos.open-invoice.edit', $transaction) }}"
+                                        
+                                          <a href="{{ route('pos.open-invoice.edit', $transaction) }}"
                                             class="inline-flex items-center justify-center gap-1.5
                                                    px-3 py-2 rounded-lg
                                                    border border-gray-200
@@ -409,8 +443,8 @@
                         <div class="mt-4 flex items-stretch gap-2">
 
                             {{-- BUKA --}}
-                            <a
-                                href="{{ route('pos.index', ['open_invoice' => $transaction->id]) }}"
+                            
+                               <a href="{{ route('pos.index', ['open_invoice' => $transaction->id]) }}"
                                 class="flex-1 min-w-0 inline-flex items-center justify-center gap-2
                                        px-3 py-2.5 rounded-lg
                                        bg-indigo-600 text-white
@@ -440,8 +474,8 @@
 
 
                             {{-- EDIT --}}
-                            <a
-                                href="{{ route('pos.open-invoice.edit', $transaction) }}"
+                            
+                               <a href="{{ route('pos.open-invoice.edit', $transaction) }}"
                                 class="flex-1 min-w-0 inline-flex items-center justify-center gap-2
                                        px-3 py-2.5 rounded-lg
                                        border border-gray-200
@@ -563,8 +597,8 @@
                     untuk muncul di sini.
                 </p>
 
-                <a
-                    href="{{ route('pos.index') }}"
+                
+                   <a href="{{ route('pos.index') }}"
                     class="inline-flex items-center gap-2 mt-5
                            px-4 py-2.5 rounded-lg
                            bg-indigo-600 text-white
@@ -582,3 +616,38 @@
 
 </div>
 @endsection
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            if ($('#invoice-table').length) {
+                $('#invoice-table').DataTable({
+                    order: [[1, 'desc']], // urutkan berdasarkan tanggal terbaru
+                    columnDefs: [
+                        {
+                            targets: 5, // kolom Aksi
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    language: {
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data",
+                        info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                        infoEmpty: "Tidak ada data",
+                        infoFiltered: "(disaring dari _MAX_ total data)",
+                        zeroRecords: "Data tidak ditemukan",
+                        paginate: {
+                            first: "Awal",
+                            last: "Akhir",
+                            next: "Berikutnya",
+                            previous: "Sebelumnya"
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+@endpush

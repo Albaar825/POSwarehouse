@@ -711,7 +711,30 @@
                             </p>
 
                         </div>
+                        {{-- QRIS DISPLAY --}}
+                        <div
+                            x-show="paymentMethod === 'qris'"
+                            x-cloak
+                            class="border border-gray-200 rounded-xl p-4 text-center"
+                        >
+                            <p class="text-sm font-semibold text-gray-800 mb-1">
+                                Scan QRIS untuk membayar
+                            </p>
 
+                            <p class="text-xs text-gray-500 mb-3">
+                                Pastikan nominal yang dibayar customer sesuai dengan total tagihan.
+                            </p>
+
+                            <img
+                                src="{{ asset('images/qris.jpeg') }}"
+                                alt="QRIS Donner"
+                                class="w-48 h-auto mx-auto rounded-lg border border-gray-100"
+                            >
+
+                            <p class="text-sm font-bold text-gray-900 mt-3">
+                                <span x-text="activeOpenInvoiceId ? formatRupiah(openInvoiceRemaining) : formatRupiah(total)"></span>
+                            </p>
+                        </div>
 
                         {{-- PAYMENT INPUT --}}
                         <div

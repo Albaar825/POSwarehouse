@@ -2,6 +2,41 @@
 
 @section('title', 'Invoice Kredit')
 
+@push('head')
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.dataTables.min.css">
+    <style>
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.375rem 0.65rem;
+            font-size: 0.875rem;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            outline: none;
+            border-color: #111827;
+            box-shadow: 0 0 0 1px #111827;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.35rem 0.65rem !important;
+            margin-left: 2px;
+            border-radius: 0.5rem !important;
+            font-size: 0.85rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #111827 !important;
+            color: white !important;
+            border-color: #111827 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+            border-color: #d1d5db !important;
+        }
+    </style>
+@endpush
+
 @section('content')
 
 <div class="space-y-6">
@@ -19,8 +54,8 @@
             </p>
         </div>
 
-        <a
-            href="{{ route('pos.index') }}"
+        
+           <a href="{{ route('pos.index') }}"
             class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
         >
             <i class="fa-solid fa-cash-register"></i>
@@ -50,9 +85,9 @@
     {{-- TABLE --}}
     <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto p-2">
 
-            <table class="w-full text-sm">
+            <table id="credit-table" class="w-full text-sm">
 
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -94,12 +129,12 @@
 
                 <tbody class="divide-y divide-gray-100">
 
-                    @forelse($transactions as $transaction)
+                    @foreach($transactions as $transaction)
 
                         <tr class="hover:bg-gray-50 transition">
 
                             {{-- INVOICE --}}
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4" data-order="{{ $transaction->created_at->timestamp }}">
 
                                 <div class="font-semibold text-gray-900">
                                     {{ $transaction->invoice_number }}
@@ -125,22 +160,22 @@
                             </td>
 
                             {{-- TOTAL --}}
-                            <td class="px-5 py-4 font-medium text-gray-900">
+                            <td class="px-5 py-4 font-medium text-gray-900" data-order="{{ $transaction->total }}">
                                 Rp {{ number_format($transaction->total, 0, ',', '.') }}
                             </td>
 
                             {{-- PAID --}}
-                            <td class="px-5 py-4 text-green-600 font-medium">
+                            <td class="px-5 py-4 text-green-600 font-medium" data-order="{{ $transaction->paid }}">
                                 Rp {{ number_format($transaction->paid, 0, ',', '.') }}
                             </td>
 
                             {{-- REMAINING --}}
-                            <td class="px-5 py-4 text-red-600 font-semibold">
+                            <td class="px-5 py-4 text-red-600 font-semibold" data-order="{{ $transaction->remaining }}">
                                 Rp {{ number_format($transaction->remaining, 0, ',', '.') }}
                             </td>
 
                             {{-- DUE DATE --}}
-                            <td class="px-5 py-4">
+                            <td class="px-5 py-4" data-order="{{ $transaction->due_date?->timestamp ?? 0 }}">
 
                                 @if($transaction->due_date)
 
@@ -193,7 +228,7 @@
                             {{-- ACTION --}}
                             <td class="px-5 py-4 text-right">
 
-                                <a
+                                
                                     href="{{ route('pos.credit.show', $transaction) }}"
                                     class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-900 text-white text-xs font-medium hover:bg-gray-800 transition"
                                 >
@@ -205,36 +240,7 @@
 
                         </tr>
 
-                    @empty
-
-                        <tr>
-
-                            <td
-                                colspan="8"
-                                class="px-5 py-12 text-center"
-                            >
-
-                                <div class="flex flex-col items-center justify-center">
-
-                                    <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                                        <i class="fa-solid fa-file-invoice-dollar text-gray-400 text-xl"></i>
-                                    </div>
-
-                                    <h3 class="font-semibold text-gray-900">
-                                        Tidak ada invoice kredit
-                                    </h3>
-
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        Semua invoice kredit sudah lunas.
-                                    </p>
-
-                                </div>
-
-                            </td>
-
-                        </tr>
-
-                    @endforelse
+                    @endforeach
 
                 </tbody>
 
@@ -242,16 +248,42 @@
 
         </div>
 
-        @if($transactions->hasPages())
-
-            <div class="px-5 py-4 border-t border-gray-200">
-                {{ $transactions->links() }}
-            </div>
-
-        @endif
-
     </div>
 
 </div>
 
 @endsection
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#credit-table').DataTable({
+                order: [[0, 'desc']], // urutkan berdasarkan invoice terbaru
+                columnDefs: [
+                    {
+                        targets: 7, // kolom Aksi
+                        orderable: false,
+                        searchable: false
+                    }
+                ],
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    infoFiltered: "(disaring dari _MAX_ total data)",
+                    zeroRecords: "Data tidak ditemukan",
+                    paginate: {
+                        first: "Awal",
+                        last: "Akhir",
+                        next: "Berikutnya",
+                        previous: "Sebelumnya"
+                    }
+                },
+                emptyTable: "Tidak ada invoice kredit. Semua invoice kredit sudah lunas."
+            });
+        });
+    </script>
+@endpush

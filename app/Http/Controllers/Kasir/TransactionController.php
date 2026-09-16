@@ -615,6 +615,12 @@ class TransactionController extends Controller
                 'max:30',
             ],
 
+            'customer_address' => [
+                'nullable',
+                'string',
+                'max:1000',
+            ],
+
             'due_date' => [
                 'nullable',
                 'date',
@@ -778,39 +784,17 @@ class TransactionController extends Controller
                     ];
                 }
 
-                $customerId = null;
+                $customerId =
+                    $this->resolveCustomer(
+                        $data['customer_id'] ?? null,
+                        $data['customer_name'] ?? null,
+                        $data['customer_phone'] ?? null,
+                        $data['customer_address'] ?? null
+                    );
 
                 if (
                     $data['payment_method'] === 'credit'
                 ) {
-
-                    $customer =
-                        Customer::where(
-                            'phone',
-                            $data['customer_phone']
-                        )->first();
-
-                    if (!$customer) {
-
-                        $customer =
-                            Customer::create([
-                                'name' =>
-                                    $data['customer_name'],
-
-                                'phone' =>
-                                    $data['customer_phone'],
-                            ]);
-
-                    } else {
-
-                        $customer->update([
-                            'name' =>
-                                $data['customer_name'],
-                        ]);
-                    }
-
-                    $customerId =
-                        $customer->id;
 
                     $paid = 0;
                     $change = 0;
@@ -1125,6 +1109,7 @@ public function historyPdf(Request $request)
 
     $query = Transaction::with([
         'user',
+        'customer',
     ])
         ->where('type', 'sale')
         ->where('status', 'paid');
@@ -1416,6 +1401,7 @@ public function historyPdf(Request $request)
             ->with([
                 'items',
                 'payments',
+                'customer',
             ])
             ->latest()
             ->get();
@@ -1461,6 +1447,29 @@ public function historyPdf(Request $request)
                 'required',
                 'integer',
                 'min:1',
+            ],
+
+            'customer_id' => [
+                'nullable',
+                'exists:customers,id',
+            ],
+
+            'customer_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'customer_phone' => [
+                'nullable',
+                'string',
+                'max:30',
+            ],
+
+            'customer_address' => [
+                'nullable',
+                'string',
+                'max:1000',
             ],
         ]);
 
@@ -1568,6 +1577,14 @@ public function historyPdf(Request $request)
                     $total += $subtotal;
                 }
 
+                $customerId =
+                    $this->resolveCustomer(
+                        $validated['customer_id'] ?? null,
+                        $validated['customer_name'] ?? null,
+                        $validated['customer_phone'] ?? null,
+                        $validated['customer_address'] ?? null
+                    );
+
                 $transaction =
                     Transaction::create([
 
@@ -1581,7 +1598,7 @@ public function historyPdf(Request $request)
                             Auth::id(),
 
                         'customer_id' =>
-                            null,
+                            $customerId,
 
                         'total' =>
                             $total,
@@ -1642,6 +1659,11 @@ public function historyPdf(Request $request)
 
                         'remaining' =>
                             (int) $transaction->total,
+
+                        'customer_name' =>
+                            $customerId
+                                ? Customer::find($customerId)?->name
+                                : null,
                     ],
                 ]);
             }
@@ -1985,6 +2007,89 @@ public function historyPdf(Request $request)
 
     /**
      * ============================================================
+     * RESOLVE / BUAT CUSTOMER (OPSIONAL)
+     *
+     * - Jika nama & HP kosong dua-duanya -> return null (tanpa customer)
+     * - Jika HP diisi & sudah ada di database -> pakai customer itu,
+     *   nama akan diupdate jika diisi
+     * - Jika HP diisi tapi belum ada -> buat customer baru
+     * - Jika HP kosong tapi nama diisi -> tetap buat customer baru
+     *   (tanpa nomor HP)
+     * ============================================================
+     */
+    private function resolveCustomer(
+        $customerId = null,
+        ?string $name = null,
+        ?string $phone = null,
+        ?string $address = null
+    ): ?int {
+        $name = trim((string) $name);
+        $phone = trim((string) $phone);
+        $address = trim((string) $address);
+
+        if ($customerId) {
+            $customer = Customer::find($customerId);
+
+            if ($customer) {
+                $updateData = [];
+
+                if (filled($name)) {
+                    $updateData['name'] = $name;
+                }
+
+                if (filled($phone)) {
+                    $updateData['phone'] = $phone;
+                }
+
+                if (filled($address)) {
+                    $updateData['address'] = $address;
+                }
+
+                if (!empty($updateData)) {
+                    $customer->update($updateData);
+                }
+
+                return $customer->id;
+            }
+        }
+
+        if (!filled($name) && !filled($phone) && !filled($address)) {
+            return null;
+        }
+
+        if (filled($phone)) {
+            $customer = Customer::where('phone', $phone)->first();
+
+            if ($customer) {
+                $updateData = [];
+
+                if (filled($name)) {
+                    $updateData['name'] = $name;
+                }
+
+                if (filled($address)) {
+                    $updateData['address'] = $address;
+                }
+
+                if (!empty($updateData)) {
+                    $customer->update($updateData);
+                }
+
+                return $customer->id;
+            }
+        }
+
+        $customer = Customer::create([
+            'name' => filled($name) ? $name : 'Customer',
+            'phone' => filled($phone) ? $phone : null,
+            'address' => filled($address) ? $address : null,
+        ]);
+
+        return $customer->id;
+    }
+
+    /**
+     * ============================================================
      * GENERATE NOMOR OPEN INVOICE
      * ============================================================
      */
@@ -2034,6 +2139,7 @@ public function historyPdf(Request $request)
             ->with([
                 'items',
                 'payments',
+                'customer',
             ])
             ->latest()
             ->get();
@@ -2081,6 +2187,21 @@ public function historyPdf(Request $request)
                                     ->items
                                     ->sum('quantity'),
 
+                            'customer_id' =>
+                                $transaction->customer_id,
+
+                            'customer_name' =>
+                                $transaction->customer->name
+                                    ?? null,
+
+                            'customer_phone' =>
+                                $transaction->customer->phone
+                                    ?? null,
+
+                            'customer_address' =>
+                                $transaction->customer->address
+                                    ?? null,
+
                             'created_at' =>
                                 $transaction->created_at
                                     ?->format(
@@ -2092,6 +2213,77 @@ public function historyPdf(Request $request)
                     ->values(),
         ]);
     }
+
+    /**
+ * ============================================================
+ * OPEN INVOICE - FORM EDIT CUSTOMER
+ * ============================================================
+ */
+public function openInvoiceEditForm(Transaction $transaction)
+{
+    if (
+        $transaction->user_id !== Auth::id()
+        || !$transaction->isOpenInvoice()
+    ) {
+        abort(404);
+    }
+
+    $transaction->load('customer');
+
+    return view('kasir.open-invoice.edit', compact('transaction'));
+}
+
+/**
+ * ============================================================
+ * OPEN INVOICE - UPDATE CUSTOMER
+ *
+ * Hanya boleh mengubah nama, no. HP, dan alamat customer.
+ * Item/barang dan total TIDAK bisa diubah dari sini.
+ * ============================================================
+ */
+public function openInvoiceUpdate(Request $request, Transaction $transaction)
+{
+    if (
+        $transaction->user_id !== Auth::id()
+        || !$transaction->isOpenInvoice()
+    ) {
+        abort(404);
+    }
+
+    $validated = $request->validate([
+        'customer_name' => ['required', 'string', 'max:255'],
+        'customer_phone' => ['nullable', 'string', 'max:30'],
+        'customer_address' => ['nullable', 'string', 'max:1000'],
+    ]);
+
+    DB::transaction(function () use ($validated, $transaction) {
+
+        if ($transaction->customer) {
+
+            // Customer sudah ada, tinggal update datanya
+            $transaction->customer->update([
+                'name' => $validated['customer_name'],
+                'phone' => $validated['customer_phone'] ?? null,
+                'address' => $validated['customer_address'] ?? null,
+            ]);
+
+        } else {
+
+            // Belum ada customer terkait, buat baru & kaitkan ke transaksi ini
+            $customer = Customer::create([
+                'name' => $validated['customer_name'],
+                'phone' => $validated['customer_phone'] ?? null,
+                'address' => $validated['customer_address'] ?? null,
+            ]);
+
+            $transaction->update(['customer_id' => $customer->id]);
+        }
+    });
+
+    return redirect()
+        ->route('pos.open-invoice.index')
+        ->with('success', 'Data customer berhasil diperbarui.');
+}
 
 
     /**
@@ -2113,6 +2305,7 @@ public function historyPdf(Request $request)
             'items.product',
             'items.variant',
             'payments.user',
+            'customer',
         ]);
 
         $paid =
@@ -2148,6 +2341,21 @@ public function historyPdf(Request $request)
 
                 'status' =>
                     $transaction->status,
+
+                'customer_id' =>
+                    $transaction->customer_id,
+
+                'customer_name' =>
+                    $transaction->customer->name
+                        ?? null,
+
+                'customer_phone' =>
+                    $transaction->customer->phone
+                        ?? null,
+
+                'customer_address' =>
+                    $transaction->customer->address
+                        ?? null,
 
                 'items' =>
                     $transaction->items

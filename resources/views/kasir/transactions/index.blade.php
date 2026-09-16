@@ -252,7 +252,7 @@
                                 <path
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
-                                    d="M6.75 3v2.25M17.25 3v2.25M3.75 9h16.5M5.25 5.25h13.5A1.5 1.5 0 0120.25 18.75v1.5H5.25a1.5 1.5 0 01-1.5-1.5v-12a1.5 1.5 0 011.5-1.5z"
+                                    d="M6.75 3v2.25M17.25 3v2.25M3.75 9h16.5M5.25 5.25h13.5A1.5 1.5 0 0120.25 6.75v12A1.5 1.5 0 0118.75 20.25H5.25a1.5 1.5 0 01-1.5-1.5v-12a1.5 1.5 0 011.5-1.5z"
                                 />
                             </svg>
 
@@ -387,26 +387,37 @@
 
                     <tr class="bg-gray-50/80 border-b border-gray-200">
 
+                        {{-- Invoice --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Invoice
                         </th>
 
+                        {{-- Tanggal --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Tanggal
                         </th>
 
+                        {{-- Kasir --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Kasir
                         </th>
 
+                        {{-- Customer --}}
+                        <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
+                            Customer
+                        </th>
+
+                        {{-- Pembayaran --}}
                         <th class="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Pembayaran
                         </th>
 
+                        {{-- Total --}}
                         <th class="text-right px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Total
                         </th>
 
+                        {{-- Aksi --}}
                         <th class="text-right px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">
                             Aksi
                         </th>
@@ -464,6 +475,34 @@
                                     </span>
 
                                 </div>
+
+                            </td>
+
+
+                            {{-- Customer --}}
+                            <td class="px-5 py-4">
+
+                                @if ($transaction->customer)
+
+                                    <div class="font-medium text-gray-800">
+                                        {{ $transaction->customer->name }}
+                                    </div>
+
+                                    @if ($transaction->customer->phone)
+
+                                        <div class="text-xs text-gray-400 mt-0.5">
+                                            {{ $transaction->customer->phone }}
+                                        </div>
+
+                                    @endif
+
+                                @else
+
+                                    <span class="text-gray-400">
+                                        -
+                                    </span>
+
+                                @endif
 
                             </td>
 
@@ -542,7 +581,7 @@
                         <tr>
 
                             <td
-                                colspan="6"
+                                colspan="7"
                                 class="px-5 py-16 text-center"
                             >
 

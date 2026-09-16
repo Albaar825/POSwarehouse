@@ -158,6 +158,12 @@
 
             Route::get('/pos/open-invoices', [TransactionController::class, 'openInvoiceIndex'])
                 ->name('pos.open-invoice.index');
+                
+            Route::get('/pos/open-invoice/{transaction}/edit', [TransactionController::class, 'openInvoiceEditForm'])
+                ->name('pos.open-invoice.edit');
+
+            Route::put('/pos/open-invoice/{transaction}', [TransactionController::class, 'openInvoiceUpdate'])
+                ->name('pos.open-invoice.update');
 
             Route::get('/pos/open-invoices/data', [TransactionController::class, 'openInvoices'])
                 ->name('pos.open-invoice.data');

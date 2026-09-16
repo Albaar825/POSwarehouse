@@ -107,31 +107,6 @@
                         </span>
 
                     </a>
-
-
-                    {{-- INVOICE KREDIT --}}
-                    <a href="{{ route('pos.credit.index') }}"
-                        class="hw-nav-link {{ request()->routeIs('pos.credit.*') ? 'active' : '' }}"
-                        data-tooltip="Invoice Kredit">
-
-                        <svg fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor">
-
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 14h6m-6-4h6m2 11H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2ZM9 3v2h6V3" />
-
-                        </svg>
-
-                        <span class="hw-nav-text">
-                            Invoice Kredit
-                        </span>
-
-                    </a>
-
                     {{-- OPEN INVOICE --}}
                     <a href="{{ route('pos.open-invoice.index') }}"
                         class="hw-nav-link {{ request()->routeIs('pos.open-invoice.*') ? 'active' : '' }}"
@@ -177,6 +152,29 @@
                         </span>
 
                     </a>
+                    {{-- INVOICE KREDIT --}}
+                    <a href="{{ route('pos.credit.index') }}"
+                        class="hw-nav-link {{ request()->routeIs('pos.credit.*') ? 'active' : '' }}"
+                        data-tooltip="Invoice Kredit">
+
+                        <svg fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor">
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 14h6m-6-4h6m2 11H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2ZM9 3v2h6V3" />
+
+                        </svg>
+
+                        <span class="hw-nav-text">
+                            Invoice Kredit
+                        </span>
+
+                    </a>
+
 
                 @endif
             </nav>

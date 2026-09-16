@@ -508,6 +508,80 @@
                         <div id="checkout-items"></div>
 
 
+                        {{-- CUSTOMER --}}
+                        <div
+                            x-show="!activeOpenInvoiceId"
+                            x-cloak
+                            class="space-y-3 mb-4"
+                        >
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium text-gray-700">
+                                    Customer
+                                </label>
+
+                                <button
+                                    type="button"
+                                    x-show="selectedCustomerId || customerName || customerPhone || customerAddress"
+                                    @click="clearCustomer()"
+                                    class="text-xs font-semibold text-red-500 hover:text-red-700"
+                                >
+                                    Hapus Customer
+                                </button>
+                            </div>
+
+                            <select
+                                x-model="selectedCustomerId"
+                                @change="selectCustomer()"
+                                class="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-transparent outline-none bg-white"
+                            >
+                                <option value="">Customer Lama</option>
+
+                                <template x-for="customer in customers" :key="customer.id">
+                                    <option
+                                        :value="customer.id"
+                                        x-text="customer.name + (customer.phone ? ' - ' + customer.phone : '')"
+                                    ></option>
+                                </template>
+                            </select>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <input
+                                    type="text"
+                                    name="customer_name"
+                                    x-model="customerName"
+                                    class="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
+                                    placeholder="Nama customer"
+                                >
+
+                                <input
+                                    type="text"
+                                    name="customer_phone"
+                                    x-model="customerPhone"
+                                    class="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
+                                    placeholder="No. HP customer"
+                                >
+                            </div>
+
+                            <textarea
+                                name="customer_address"
+                                x-model="customerAddress"
+                                rows="2"
+                                class="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none resize-none"
+                                placeholder="Alamat customer"
+                            ></textarea>
+
+                            <input
+                                type="hidden"
+                                name="customer_id"
+                                :value="selectedCustomerId || ''"
+                            >
+
+                            <p class="text-xs text-gray-400">
+                                Customer opsional untuk Cash / QRIS dan wajib untuk transaksi Kredit.
+                            </p>
+                        </div>
+
+
                         {{-- PAYMENT METHOD --}}
                         <div class="space-y-2">
 
@@ -574,37 +648,6 @@
                             x-cloak
                             class="space-y-3"
                         >
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">
-                                    Nama Customer
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="customer_name"
-                                    x-model="customerName"
-                                    :required="paymentMethod === 'credit' && !activeOpenInvoiceId"
-                                    class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                    placeholder="Masukkan nama customer"
-                                >
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-sm font-medium text-gray-700">
-                                    No. HP Customer
-                                </label>
-
-                                <input
-                                    type="text"
-                                    name="customer_phone"
-                                    x-model="customerPhone"
-                                    :required="paymentMethod === 'credit' && !activeOpenInvoiceId"
-                                    class="w-full px-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-gray-900 outline-none"
-                                    placeholder="Masukkan nomor HP customer"
-                                >
-                            </div>
-
                             <div class="space-y-2">
                                 <label class="text-sm font-medium text-gray-700">
                                     Jatuh Tempo
@@ -629,7 +672,6 @@
                                     Barang langsung mengurangi stok dan pembayaran dapat dilakukan kemudian.
                                 </p>
                             </div>
-
                         </div>
 
 
@@ -1454,8 +1496,14 @@ function posApp() {
 
         paymentMethod: 'cash',
         paid: 0,
+
+        // CUSTOMER
+        customers: @json($customers),
+        selectedCustomerId: '',
         customerName: '',
         customerPhone: '',
+        customerAddress: '',
+
         dueDate: '',
 
         /*
@@ -2861,6 +2909,31 @@ function posApp() {
 
         },
 
+        selectCustomer() {
+
+            const customer = this.customers.find(
+                item => String(item.id) === String(this.selectedCustomerId)
+            );
+
+            if (!customer) {
+                return;
+            }
+
+            this.customerName = customer.name || '';
+            this.customerPhone = customer.phone || '';
+            this.customerAddress = customer.address || '';
+        },
+
+
+        clearCustomer() {
+
+            this.selectedCustomerId = '';
+            this.customerName = '';
+            this.customerPhone = '';
+            this.customerAddress = '';
+        },
+
+
         clearCart() {
 
             if (this.activeOpenInvoiceId) {
@@ -2883,8 +2956,10 @@ function posApp() {
 
             this.paid = 0;
 
+            this.selectedCustomerId = '';
             this.customerName = '';
             this.customerPhone = '';
+            this.customerAddress = '';
             this.dueDate = '';
 
             this.paymentMethod =
@@ -3067,7 +3142,19 @@ function posApp() {
                                                 quantity:
                                                     item.quantity
                                             })
-                                        )
+                                        ),
+
+                                    customer_id:
+                                        this.selectedCustomerId || null,
+
+                                    customer_name:
+                                        this.customerName || null,
+
+                                    customer_phone:
+                                        this.customerPhone || null,
+
+                                    customer_address:
+                                        this.customerAddress || null
                                 })
                         }
                     );
@@ -3296,9 +3383,7 @@ function posApp() {
 
         async resumeOpenInvoice(transactionId) {
 
-            if (
-                this.loadingInvoiceId
-            ) {
+            if (this.loadingInvoiceId) {
                 return;
             }
 
@@ -3306,153 +3391,209 @@ function posApp() {
                 this.cart.length > 0 &&
                 !this.activeOpenInvoiceId
             ) {
-
-                const confirmed =
-                    confirm(
-                        'Keranjang saat ini masih berisi produk. Buka Open Invoice akan mengganti isi keranjang saat ini. Lanjutkan?'
-                    );
+                const confirmed = confirm(
+                    'Keranjang saat ini masih berisi produk. Buka Open Invoice akan mengganti isi keranjang saat ini. Lanjutkan?'
+                );
 
                 if (!confirmed) {
                     return;
                 }
-
             }
 
-            this.loadingInvoiceId =
-                transactionId;
+            this.loadingInvoiceId = transactionId;
 
             try {
 
-                const response =
-                    await fetch(
-                        '{{ url('/pos/open-invoice') }}/' +
-                        transactionId,
-                        {
-                            method: 'GET',
-
-                            headers: {
-                                'Accept':
-                                    'application/json',
-
-                                'X-Requested-With':
-                                    'XMLHttpRequest'
-                            }
+                const response = await fetch(
+                    '{{ url('/pos/open-invoice') }}/' + transactionId,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
+                    }
+                );
+
+                const contentType =
+                    response.headers.get('content-type') || '';
+
+                if (!response.ok) {
+
+                    let message =
+                        'Gagal membuka Open Invoice.';
+
+                    if (contentType.includes('application/json')) {
+                        const errorData =
+                            await response.json();
+
+                        message =
+                            errorData.message ||
+                            message;
+                    } else {
+                        console.error(
+                            'Response Open Invoice bukan JSON:',
+                            await response.text()
+                        );
+                    }
+
+                    throw new Error(message);
+                }
+
+                if (!contentType.includes('application/json')) {
+                    console.error(
+                        'Response Open Invoice bukan JSON:',
+                        await response.text()
                     );
+
+                    throw new Error(
+                        'Server mengembalikan response Open Invoice bukan JSON.'
+                    );
+                }
 
                 const data =
                     await response.json();
 
-                if (!response.ok) {
-
-                    throw new Error(
-                        data.message ||
-                        'Gagal membuka Open Invoice.'
-                    );
-
-                }
-
                 const invoice =
                     data.data;
 
+                if (!invoice || !invoice.id) {
+                    throw new Error(
+                        'Data Open Invoice tidak ditemukan.'
+                    );
+                }
+
+                const items =
+                    Array.isArray(invoice.items)
+                        ? invoice.items
+                        : [];
+
                 this.cart =
-                    (invoice.items || [])
-                        .map(
-                            item => ({
+                    items.map((item, index) => {
 
-                                key:
-                                    String(
-                                        item.product_id
-                                    ) +
-                                    '-' +
-                                    String(
-                                        item.product_variant_id
-                                    ),
+                        const productId =
+                            Number(item.product_id || 0);
 
-                                product_id:
-                                    item.product_id,
+                        const variantId =
+                            item.product_variant_id !== null &&
+                            item.product_variant_id !== undefined
+                                ? Number(item.product_variant_id)
+                                : null;
 
-                                product_variant_id:
-                                    item.product_variant_id,
+                        const transactionItemId =
+                            item.id !== null &&
+                            item.id !== undefined
+                                ? Number(item.id)
+                                : index;
 
-                                name:
-                                    item.name,
+                        return {
 
-                                variant:
-                                    item.variant || '-',
+                            key:
+                                String(productId) +
+                                '-' +
+                                String(variantId ?? '') +
+                                '-' +
+                                String(transactionItemId),
 
-                                attributes:
-                                    Array.isArray(
-                                        item.attributes
-                                    )
-                                        ? [
-                                            ...item.attributes
-                                        ]
-                                        : [],
+                            product_id:
+                                productId,
 
-                                sku_variant:
-                                    item.sku_variant,
+                            product_variant_id:
+                                variantId,
 
-                                price:
-                                    Number(
-                                        item.price
-                                    ),
+                            name:
+                                item.name ||
+                                item.product_name ||
+                                '-',
 
-                                image:
-                                    item.image
-                                        ? this.normalizeImage(
-                                            item.image
-                                        )
-                                        : null,
+                            variant:
+                                item.variant ||
+                                item.variant_label ||
+                                '-',
 
-                                stock:
-                                    Number(
-                                        item.stock || 0
-                                    ),
+                            attributes:
+                                Array.isArray(item.attributes)
+                                    ? [...item.attributes]
+                                    : [],
 
-                                quantity:
-                                    Number(
-                                        item.quantity
-                                    ),
+                            sku_variant:
+                                item.sku_variant || null,
 
-                                persisted:
-                                    true
+                            price:
+                                Number(item.price || 0),
 
-                            })
-                        );
+                            image:
+                                item.image
+                                    ? this.normalizeImage(item.image)
+                                    : null,
+
+                            stock:
+                                Number(item.stock || 0),
+
+                            quantity:
+                                Math.max(
+                                    1,
+                                    Number(item.quantity || 1)
+                                ),
+
+                            persisted: true
+                        };
+                    });
 
                 this.activeOpenInvoiceId =
-                    invoice.id;
+                    Number(invoice.id);
 
                 this.activeOpenInvoiceNumber =
-                    invoice.invoice_number;
+                    invoice.invoice_number || '';
 
                 this.openInvoiceTotal =
-                    Number(
-                        invoice.total ||
-                        0
-                    );
+                    Number(invoice.total || 0);
 
                 this.openInvoicePaid =
-                    Number(
-                        invoice.paid ||
-                        0
-                    );
+                    Number(invoice.paid || 0);
+
+                // Restore customer dari Open Invoice.
+                this.selectedCustomerId =
+                    invoice.customer_id
+                        ? String(invoice.customer_id)
+                        : '';
+
+                this.customerName =
+                    invoice.customer_name || '';
+
+                this.customerPhone =
+                    invoice.customer_phone || '';
+
+                this.customerAddress =
+                    invoice.customer_address || '';
 
                 this.paymentMethod =
                     'cash';
 
-                this.paid = 0;
+                this.paid =
+                    0;
 
-                this.customerName = '';
-                this.customerPhone = '';
-                this.dueDate = '';
+                this.dueDate =
+                    '';
 
                 this.closeOpenInvoiceModal();
 
+                console.log(
+                    'Open Invoice berhasil dibuka:',
+                    invoice
+                );
+
+                console.log(
+                    'Item Open Invoice:',
+                    this.cart
+                );
+
             } catch (error) {
 
-                console.error(error);
+                console.error(
+                    'resumeOpenInvoice:',
+                    error
+                );
 
                 alert(
                     error.message ||
@@ -3463,10 +3604,9 @@ function posApp() {
 
                 this.loadingInvoiceId =
                     null;
-
             }
-
         },
+
 
         /*
         |--------------------------------------------------------------------------
